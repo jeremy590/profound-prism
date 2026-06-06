@@ -15,10 +15,14 @@ How we split one shared Profound data beam into six role-specific views. Each vi
                  │  frames + cached org metadata       │
                  └──────────────────┬──────────────────┘
                                     │  (in-memory, ~zero extra API calls)
-        ┌──────────┬──────────┬─────┴────┬──────────┬──────────┐
-       CMO        SEO        PM        Brand        PR       Regional   ← six Prisms
-        │          │          │          │          │          │
+        ┌──────────────┬───────────┴───┬──────────────┬──────────────┐
+       CMO            SEO             PM            Brand            PR     ← five Prisms
+        │              │              │              │              │
    each Prism = a declarative slice (dimensions + filters) + framing + downstream agent
+
+  Regional was dropped: the org runs every prompt in the US region only, so there is
+  no cross-market signal to split. Re-add a localisation Prism if multi-region data
+  is ever enabled (the writes_prompts field on the schema is reserved for it).
 ```
 
 A **Prism** is a config, not a copy of the data. It selects how the *same* prompts and topics get sliced and framed for one role.
@@ -60,18 +64,26 @@ Each report is pulled with its widest supported dimension set **minus `persona`*
 
 ---
 
+## Curation mode — not every Prism is curated by prompt
+
+A key finding from grading: the five Prisms split into two curation modes.
+
+- **Prompt-curated** — *which prompts feed this lens* is a real per-prompt question, answered by the Claude classifier (see below): **CMO, PM, Brand**.
+- **Citation-curated** — the lens is a property of the *citation report* (which domains/URLs/source-types get cited), not of individual prompts; it applies across **all** prompts and is sliced by domain/url instead: **SEO, PR**.
+
+So the classifier only labels prompts for CMO / PM / Brand. SEO and PR consume the whole prompt set and slice the citations frame.
+
 ## How a Prism slices **prompts** (the 195)
 
 Same prompt set, different selector per role. Only PM *transforms* prompts (LLM clustering); the rest filter.
 
-| Prism | `prompt_treatment` | What it selects |
-|---|---|---|
-| CMO | `new` | newest prompts only — emerging search themes |
-| SEO | `lost_citation` | prompts where an owned URL lost citation share |
-| PM | `cluster` | prompts mentioning the product → **clustered into use-case themes** (LLM) |
-| Brand | `sentiment_shift` | prompts driving a material WoW sentiment move → raw answers for phrase extraction |
-| PR | `third_party` | prompts feeding third-party (non-owned) citations |
-| Regional | `localisation` | prompts that don't translate cleanly across markets ("running indoors in Dubai") |
+| Prism | mode | `prompt_treatment` | What it selects |
+|---|---|---|---|
+| CMO | prompt | `new` | newest / top-line / category-defining prompts — emerging search themes |
+| PM | prompt | `cluster` | use-case & capability prompts → **clustered into use-case themes** (LLM) |
+| Brand | prompt | `sentiment_shift` | opinion / characterisation prompts driving a WoW sentiment move |
+| SEO | citation | `lost_citation` | *all* prompts; sliced by owned URL/domain citation deltas |
+| PR | citation | `third_party` | *all* prompts; sliced by third-party domain / url / source-type |
 
 ## How a Prism slices **topics** (the 15)
 
@@ -83,15 +95,15 @@ Same 15 topics, different treatment.
 | SEO | `decay` | topic-level visibility & citation decline (period delta) |
 | PM | `cluster` | topics as the clustering taxonomy for use-cases |
 | Brand | `theme` | topic ≈ sentiment theme |
-| PR | `leaderboard` | topic = category scope for the citation leaderboard |
-| Regional | `region_divergence` | topic **× region** — where a topic wins in one market, loses in another |
+| PR | `leaderboard` | topic used to map cited domains to beats (pitch routing) |
 
 ---
 
 ## Read-side vs write-side Prisms
 
-- **Read-side (5 of 6):** non-destructive. The Prism is a query template + framing over the cached base. No writes to Profound.
-- **Write-side (Regional only):** proposes *mutating the prompt set* — adding region-localised prompt variants via `PATCH /v1/org/categories/{id}/prompts`. This is the one Prism that changes Profound's own state, so it is **architecturally separate and gated behind human approval** (`writes_prompts: true` + an approval checkpoint). Never auto-applied.
+All five current Prisms are **read-side** — non-destructive query templates + framing over the cached base. No writes to Profound.
+
+The `writes_prompts` flag (+ approval gate) on the schema is **reserved**: if multi-region data is ever enabled, a localisation Prism would use it to propose region-specific prompt variants via `PATCH /v1/org/categories/{id}/prompts`. Until then, nothing writes.
 
 ---
 
@@ -100,7 +112,7 @@ Same 15 topics, different treatment.
 Each bolts onto one Prism as a single node; each ships without it:
 - **DataForSEO People Also Ask** → PM adjacent-question demand (creds already in `.env`).
 - **Reddit sentiment** → PM competitor profiles / Brand cross-check (Idea 3).
-- **Business KPI join (GA4/GSC/Shopify)** → Regional AI-vs-business divergence quadrant (this is the headline insight, but data-dependent).
+- **Business KPI join (GA4/GSC/Shopify)** → CMO commercial overlay — tie visibility to sessions/revenue (Max's "$1M fix"; data-dependent).
 
 ---
 

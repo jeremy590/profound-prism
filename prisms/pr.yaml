@@ -1,6 +1,8 @@
 # PR / Earned Media Lead — Citation Outreach prism
 # Source framing: Cowork docs/Personas.md §5.
 # Closest prism to Profound's own canonical demo (top third-party pages citing the brand).
+# CITATION-CURATED, not prompt-curated: this lens applies across all prompts and is
+# sliced by domain/url/source-type, not by which prompts feed it.
 
 role: pr
 title: PR / Earned Media Lead
@@ -8,21 +10,24 @@ goal: >
   Give the PR Lead a working list of third-party domains and authors who write about
   the category but don't currently cite the brand. Rank by citation volume in the
   category, identify the editor or author, and prepare personalised pitch drafts ready
-  for review. Also surface citations the brand has lost and competitor wins on target
-  publications.
+  for review. Also surface citations the brand has lost, which sources dominate each
+  topic and engine, and competitor wins on target publications.
 
 questions:
   - Which third-party domains are AI engines citing most in our category?
   - Of those, which aren't currently citing us?
+  - What types of sources dominate (news, blogs, forums, docs)?
+  - Which domains own which topics — where should we pitch by beat?
+  - Which engines lean on which domains (where does a placement actually move the needle)?
+  - Which specific pages and prompts is each domain getting cited on?
   - Where have we lost citations we used to hold?
-  - Which authors at our target publications write about the category?
   - Which competitors are winning citations on the publications we want?
 
-prompt_treatment: third_party   # prompts feeding non-owned citations
-topic_treatment: leaderboard    # topic = category scope for the citation leaderboard
+prompt_treatment: third_party   # citation-driven; applies across all prompts
+topic_treatment: leaderboard    # topic used to map domains to beats
 
 slices:
-  # Third-party domain leaderboard (exclude owned root_domains via filter)
+  # 1. Third-party domain leaderboard (exclude owned root_domains via filter)
   - report: citations
     dimensions: [root_domain]
     metrics: [count, citation_share]
@@ -30,14 +35,42 @@ slices:
     order_by: citation_share
     limit: 50
 
-  # Page-level citation map within target domains
+  # 2. Page-level citation map — the exact URLs getting cited within target domains
   - report: citations
-    dimensions: [url]
+    dimensions: [root_domain, url]
+    metrics: [count, citation_share]
+    period_delta: true
+    order_by: count
+    limit: 100
+
+  # 3. Source-type mix — what KIND of source AI leans on (news / blog / forum / docs)
+  - report: citations
+    dimensions: [citation_category]
+    metrics: [count, citation_share]
+    period_delta: true
+
+  # 4. Domain × topic — which domains own which beats (pitch routing by topic)
+  - report: citations
+    dimensions: [root_domain, topic]
     metrics: [count, citation_share]
     period_delta: true
     order_by: count
 
-  # Domains where competitors win and we don't
+  # 5. Domain × engine — where a placement actually moves visibility (ChatGPT vs Perplexity…)
+  - report: citations
+    dimensions: [root_domain, model]
+    metrics: [count, citation_share]
+    period_delta: true
+
+  # 6. Domain × prompt — the specific prompts a domain is cited on (pitch hooks)
+  - report: citations
+    dimensions: [root_domain, prompt]
+    metrics: [count]
+    period_delta: false
+    order_by: count
+    limit: 200
+
+  # 7. Competitor-win domains — where rivals win citations and we don't
   # filters.asset_name -> competitor list once known
   - report: citations
     dimensions: [root_domain]
@@ -46,5 +79,4 @@ slices:
 
 # NOTE: contact enrichment (Clay / Apollo: domain -> editor/author) is a layer-later
 # treatment handled by the executor, not a report-frame slice.
-
 writes_prompts: false

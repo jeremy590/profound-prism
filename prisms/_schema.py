@@ -15,22 +15,23 @@ from pydantic import BaseModel, Field
 
 Report = Literal["visibility", "citations", "sentiment", "referrals", "bots"]
 
+# Curation mode per prism:
+#   prompt-curated (classify per prompt): CMO, PM, Brand
+#   citation-curated (apply across all prompts, slice by domain/url/source): SEO, PR
 PromptTreatment = Literal[
-    "new",             # CMO — newest prompts, emerging themes
-    "lost_citation",   # SEO — prompts where an owned URL lost citation share
-    "cluster",         # PM  — cluster prompts into use-case themes (LLM)
-    "sentiment_shift", # Brand — prompts driving a WoW sentiment move
-    "third_party",     # PR  — prompts feeding non-owned citations
-    "localisation",    # Regional — prompts that don't translate across markets
+    "new",             # CMO — newest prompts, emerging themes        [prompt-curated]
+    "lost_citation",   # SEO — citation-driven, sliced by url/domain  [citation-curated]
+    "cluster",         # PM  — cluster prompts into use-case themes    [prompt-curated]
+    "sentiment_shift", # Brand — prompts driving a WoW sentiment move  [prompt-curated]
+    "third_party",     # PR  — citation-driven, sliced by domain/url   [citation-curated]
 ]
 
 TopicTreatment = Literal[
-    "growth",            # CMO
-    "decay",             # SEO
-    "cluster",           # PM
-    "theme",             # Brand
-    "leaderboard",       # PR
-    "region_divergence", # Regional
+    "growth",       # CMO
+    "decay",        # SEO
+    "cluster",      # PM
+    "theme",        # Brand
+    "leaderboard",  # PR
 ]
 
 
@@ -54,14 +55,14 @@ class ReportSlice(BaseModel):
 class Prism(BaseModel):
     """A role lens over the shared data beam."""
 
-    role: str                       # "cmo" | "seo" | "pm" | "brand" | "pr" | "regional"
+    role: str                       # "cmo" | "seo" | "pm" | "brand" | "pr"
     title: str                      # human label for the dashboard
     goal: str                       # downstream agent's system goal (from the Description)
     questions: list[str]            # preloaded FAQ chips
     slices: list[ReportSlice]
     prompt_treatment: PromptTreatment
     topic_treatment: TopicTreatment
-    writes_prompts: bool = False    # only Regional; gated by human approval
+    writes_prompts: bool = False    # reserved (multi-region localisation); gated by approval
     # NB: list[str]/dict[...] subscripts kept (valid on 3.9+ via __future__ annotations);
     # only PEP-604 `X | Y` unions are avoided for 3.9 compatibility.
 
