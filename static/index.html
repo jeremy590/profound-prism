@@ -193,6 +193,9 @@
   /* ---------- Action cards ---------- */
   .acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; }
   .act { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px 20px; }
+  .act--soon { opacity: 0.72; border-style: dashed; background: #FCFCFD; }
+  .act--soon:hover { opacity: 0.9; }
+  .soon-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--amber); background: rgba(184,134,11,0.10); border-radius: var(--radius-pill); padding: 2px 9px; white-space: nowrap; }
   .act__title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
   .act__desc { font-size: 13px; color: var(--text-secondary); margin: 8px 0 12px; line-height: 1.45; flex: 1; }
   .act__inputs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
@@ -1203,6 +1206,19 @@ function BriefTile({ tile, onAction }) {
                 })}
               </div>
             ) : null}
+            {(tile.coming && tile.coming.length) ? (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--prism-hair)", display: "flex", flexDirection: "column", gap: 7 }}>
+                {tile.coming.map((c, i) => (
+                  <div key={"c" + i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span className="chip" style={{ flex: "none", fontSize: 10.5, fontWeight: 700 }}>{c.team}</span>
+                    <span title={c.title + " — " + c.desc} style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text-secondary)" }}>
+                      <b style={{ color: "var(--text-primary)", fontWeight: 600 }}>{c.title}</b> — {c.desc}
+                    </span>
+                    <span className="soon-pill" style={{ flex: "none" }}>Coming soon</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </React.Fragment>
         )}
       </div>
@@ -1492,12 +1508,13 @@ function RunResult({ run }) {
 function ActionCard({ action, ctx, highlight }) {
   const [run, setRun] = useState(null); // null | "running" | result
   const ref = React.useRef(null);
-  const isHi = highlight && highlight === action.id;
+  const coming = !!action.coming;       // roadmap teaser — never runs
+  const isHi = !coming && highlight && highlight === action.id;
   const inputChips = action.inputChips || action.inputs || [];
   const built = action.built !== false;
-  const cachedAction = !!action.cached;   // backend says a cached run exists
+  const cachedAction = !coming && !!action.cached;   // backend says a cached run exists
   const launch = async (force) => {
-    if (!built) return;
+    if (coming || !built) return;
     setRun("running");
     const r = await api.runAction(action.id, { ...(action.inputs || {}), region: ctx.region, force: !!force });
     setRun(r);
@@ -1512,23 +1529,30 @@ function ActionCard({ action, ctx, highlight }) {
   }, [highlight]);
   const done = run && run !== "running";
   const showResult = cachedAction || done;        // never offer "Run agent" for cached
+  // A running or result-bearing agent takes the full row so its activity has room.
+  const wide = run === "running" || done;
+  const wrapStyle = { ...(isHi ? { boxShadow: "0 0 0 2px var(--accent)", borderColor: "var(--accent)" } : {}), ...(wide ? { gridColumn: "1 / -1" } : {}) };
   return (
-    <div className="act" ref={ref} style={isHi ? { boxShadow: "0 0 0 2px var(--accent)", borderColor: "var(--accent)" } : null}>
+    <div className={"act" + (coming ? " act--soon" : "") + (wide ? " act--wide" : "")} ref={ref} style={wrapStyle}>
       <div className="act__title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {action.team ? <span className="chip" style={{ fontSize: 10, fontWeight: 700 }}>{action.team}</span> : null}
         <span>{action.title}</span>
-        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-tertiary)", fontWeight: 600 }}>
-          <span className="statdot" style={{ background: built ? "var(--green)" : "var(--text-tertiary)" }} />{built ? "Built" : "Not built"}
-        </span>
+        {coming
+          ? <span className="soon-pill" style={{ marginLeft: "auto" }}>Coming soon</span>
+          : <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-tertiary)", fontWeight: 600 }}>
+              <span className="statdot" style={{ background: built ? "var(--green)" : "var(--text-tertiary)" }} />{built ? "Built" : "Not built"}
+            </span>}
       </div>
       <div className="act__desc">{withBold(action.desc)}</div>
-      <div className="act__inputs">{inputChips.map((inp, i) => <span key={i} className="act__chip"><b>{inp[0]}</b> {inp[1]}</span>)}</div>
+      {coming ? null : <div className="act__inputs">{inputChips.map((inp, i) => <span key={i} className="act__chip"><b>{inp[0]}</b> {inp[1]}</span>)}</div>}
       <div className="act__foot">
-        {run === "running" ? <span className="runstat runstat--running"><span className="spin"><SpinIcon /></span> {cachedAction ? "Loading…" : "Running agent…"}</span>
+        {coming ? <span style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>On the roadmap</span>
+          : run === "running" ? <span className="runstat runstat--running"><span className="spin"><SpinIcon /></span> {cachedAction ? "Loading…" : "Running agent…"}</span>
           : done ? <span className="runstat runstat--done"><span className="statdot" style={{ background: "var(--green)" }} /> {run.agentRun && run.agentRun.cached ? "Cached result" : "Agent run complete"}</span>
           : cachedAction ? <span style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>Loading cached result…</span>
           : <span style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>{built ? "Ready · " + inputChips.length + " input set(s)" : "Awaiting Profound graph"}</span>}
-        {showResult ? <button className="btn btn--ghost btn--sm" onClick={() => launch(true)} disabled={run === "running"}>Refresh (live)</button>
+        {coming ? <button className="btn btn--ghost btn--sm" disabled>Coming soon</button>
+          : showResult ? <button className="btn btn--ghost btn--sm" onClick={() => launch(true)} disabled={run === "running"}>Refresh (live)</button>
           : <button className="btn btn--accent btn--sm" onClick={() => launch(false)} disabled={run === "running" || !built}>Run agent <ArrowIcon /></button>}
       </div>
       {run === "running" ? (
