@@ -1063,10 +1063,13 @@ def actions(role, ctx=None):
 # on (topic_metric) + which supporting table to show (table). input_var/output_var
 # are optional — if absent they're auto-discovered from the live agent schema at
 # run time, so an agent activates as soon as it's published (no hardcoded UUIDs).
+# NB: agent_id = the API run id; link_id = the platform editor/UI id (link-out only).
+# The Profound platform shows a different id in its URL than the API runs against.
 PROFOUND_AGENTS = {
     "brand_risk": {  # Brand · Sentiment-risk response — runs on our worst-sentiment topic
         "name": "Topic Sentiment C-Suite Brief",
         "agent_id": "019e9e31-96e3-7372-9977-97b33096d79d",
+        "link_id": "019e9e31-96e3-7372-9977-97cc0a4e5807",
         "input_var": "54c2db45-66a5-48f0-916f-0f083ba299c5",   # "Payload" (JSON string)
         "output_var": "4165b648-4c1e-4e0b-84e6-4cc11bed495f",  # "LLM Response" (JSON string)
         "brand": OWNED_BRAND, "topic_metric": "sentiment", "table": "themes",
@@ -1074,6 +1077,7 @@ PROFOUND_AGENTS = {
     "seo_brief": {  # SEO · Citation-gap closer — runs on our lowest-citation topic
         "name": "Citation Gap Content Brief Generator",
         "agent_id": "019e9e50-3cf9-7782-979e-0b788ab86228",
+        "link_id": "019e9e50-3cf9-7782-979e-0b8740f77944",
         # input_var/output_var auto-discovered from the live schema once published
         "brand": OWNED_BRAND, "topic_metric": "citation", "table": "citation",
         "poll_s": 900,                                          # heavier agent (crawls web)
@@ -1081,6 +1085,7 @@ PROFOUND_AGENTS = {
     "pm_adjacent": {  # PM · Fan-out roadmap — runs on our weakest use-case topic
         "name": "Fan-Out Roadmap Clusterer",
         "agent_id": "019e9e70-de87-7112-9455-a6d31cc5d2b1",
+        "link_id": "019e9e70-de87-7112-9455-a6e6e37ec6b0",
         "input_var": "92ee5f6e-fcd2-4b4f-805a-e2a63fd5067b",   # "Payload" (JSON string)
         "output_var": "abead634-ca39-4d79-be4b-28bb69d6bef8",  # "LLM Response" (JSON string)
         "brand": OWNED_BRAND, "topic_metric": "visibility", "table": "fanout",
@@ -1088,6 +1093,7 @@ PROFOUND_AGENTS = {
     "pr_pitch": {  # Earned Media Lead · Strategic Citation Outreach
         "name": "Strategic Citation Outreach",
         "agent_id": "019e9eaa-7c51-7ab2-9394-a97521cfb86a",
+        "link_id": "019e9eaa-7c51-7ab2-9394-a98b30c308fd",
         # input_var/output_var auto-discovered from the live schema
         "brand": OWNED_BRAND, "payload": "brand_count", "topic_count": 3,
         "table": "citation",                                   # the worst topics it'll target
@@ -1195,10 +1201,12 @@ def _configured_for(spec, topic, brand):
             "topic_id": topic["topic_id"] if topic else None}
 
 
-def _agent_url(agent_id, brand):
-    """Deep link to the agent's run page in the Profound platform."""
+def _agent_url(spec, brand):
+    """Deep link to the agent's run page in the Profound platform. The platform UI
+    uses a different (editor) id than the API run id, so prefer the spec's link_id."""
+    aid = spec.get("link_id") or spec["agent_id"]
     return ("https://platform.tryprofound.com/" + CATEGORY_ID + "/" + brand +
-            "/agents/" + agent_id + "/run")
+            "/agents/" + aid + "/run")
 
 
 def _resolve_io(rl, spec):
@@ -1220,7 +1228,7 @@ def _activate_topic_agent(spec, topic, brand, poll_s=300):
     from agents.runloop import AgentRunLoop
     block = {"name": spec["name"], "agentId": spec["agent_id"], "runId": None,
              "status": "error", "report": "", "brief": None,
-             "url": _agent_url(spec["agent_id"], brand),
+             "url": _agent_url(spec, brand),
              "configured": _configured_for(spec, topic, brand)}
     if not topic:
         block["report"] = "No qualifying topic found for " + brand + "."
@@ -1367,7 +1375,7 @@ def run_topic_agent_action(action_id, ctx):
             agent_run = {
                 "name": c["name"] or spec["name"], "agentId": spec["agent_id"],
                 "runId": c["run_id"], "status": c["status"], "report": c["output"], "brief": brief,
-                "url": _agent_url(spec["agent_id"], brand),
+                "url": _agent_url(spec, brand),
                 "configured": _configured_for(spec, topic, brand),
                 "cached": True, "ts": c["created_at"]}
     if agent_run is None:                                # cache miss / forced → live run
