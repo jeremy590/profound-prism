@@ -1,7 +1,8 @@
 {
   "summary": [
-    "ChatGPT sits **#5** in the frontier-model pack on share of voice, only **0.018** behind **Claude**. But counted as one house, the OpenAI family (ChatGPT + OpenAI) combines for **0.111 SoV**, enough that it **would top the category**. The race is **winnable**.",
-    "The real issue is quality and concentration, not headline rank. AI engines describe us **net-negatively (-403)** while they describe Claude **positively**. The visibility gap is widest on **Microsoft Copilot**, where we trail by **20 points**, not on ChatGPT itself."
+    "ChatGPT sits **#5** on share of voice, just **1.8 points** behind **Claude** — but counted as one house, the OpenAI family (ChatGPT + OpenAI) combines for **0.111 SoV**, enough to **top the category**. The gap to #1 is narrow and the race is **winnable**.",
+    "The real issue is *how* AI describes us, not where we rank. Only **45% of our sentiment is positive** (net **-403**) while Claude reads positive — and we trail Claude on **every engine**, widest on **Microsoft Copilot (-20pts)** and narrowest on ChatGPT itself (-9pts). The damage is concentrated in a few themes: **privacy** and **accuracy / hallucinations**.",
+    "The lever is the *source*, not the prompt. Barely **1% of citations** about the category come from **owned** channels — the engines build their answers from **social (26%)** and **earned media (15%)**. Winning means fixing the privacy/accuracy narrative at the source and earning citations where the models actually look, not chasing headline visibility."
   ],
   "actions": [
     {
