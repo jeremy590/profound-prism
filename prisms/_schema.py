@@ -52,6 +52,34 @@ class ReportSlice(BaseModel):
     limit: Optional[int] = None
 
 
+class DispatchRule(BaseModel):
+    """One CMO→specialist hand-off. When a breach of `when` is detected, run
+    the downstream Profound agent `agent`, scoped by `scope`.
+
+    `agent` is resolved by name against the live org at run time; if no such
+    agent exists yet the dispatch is recorded as `would_dispatch` (guarded),
+    so the orchestrator ships before the specialist graphs are built.
+    """
+
+    when: Literal[
+        "engine_gap",                # gap to category leader on an engine → SEO
+        "negative_sentiment_theme",  # net-negative theme → Brand
+        "owned_domain_undercited",   # owned domain low citation share → PR
+    ]
+    agent: str                       # downstream agent NAME (resolved to id at run time)
+    scope: Literal["topic", "engine", "theme", "domain", "region"] = "region"
+
+
+class Thresholds(BaseModel):
+    """Level-based gates (one snapshot, no deltas). A breach fires the brief's
+    escalation items and the matching dispatch rule."""
+
+    engine_gap_pts: float = 10.0     # gap (pts) to leader on an engine that warrants a flag
+    net_sentiment: float = 0.0       # net (pos−neg) below this on a theme = reputation escalation
+    pack_spread_pts: float = 0.03    # top-pack mean-SoV spread below this → frame as "winnable"
+    visibility_rank_max: int = 3     # rank worse than this in a (model,region) = competitive concern
+
+
 class Prism(BaseModel):
     """A role lens over the shared data beam."""
 
@@ -63,6 +91,9 @@ class Prism(BaseModel):
     prompt_treatment: PromptTreatment
     topic_treatment: TopicTreatment
     writes_prompts: bool = False    # reserved (multi-region localisation); gated by approval
+    # Orchestrator config — present on the CMO prism (the router); optional elsewhere.
+    thresholds: Optional[Thresholds] = None
+    dispatch: list[DispatchRule] = Field(default_factory=list)
     # NB: list[str]/dict[...] subscripts kept (valid on 3.9+ via __future__ annotations);
     # only PEP-604 `X | Y` unions are avoided for 3.9 compatibility.
 

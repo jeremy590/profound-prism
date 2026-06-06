@@ -1,0 +1,40 @@
+{
+  "summary": [
+    "ChatGPT ranks **#5** on share of voice (**5.4%**) and **39.1%** visibility, but the citation problem is sharper than the rank: our own pages barely surface. **openai.com is only the #5 cited domain (804 cites)**, dwarfed by **reddit.com (7,238)**, **youtube.com (4,609)** and **medium.com (1,731)**. Recovering owned citations is the highest-leverage move on this board.",
+    "By topic, visibility collapses on **API (25%)** and **Coding (32%)** — well below Safety and Speed (~50%) — so those are the pages to build or refresh first. Owned-citation share is thinnest on **Google Gemini (0.8%)** and **Perplexity (0.9%)**, the under-served engines to target, not ChatGPT itself."
+  ],
+  "actions": [
+    {
+      "team": "Content",
+      "agent": "seo_brief",
+      "text": "build content briefs for the **citation-gap topics** where we rank but aren't cited: **API (25%)** and **Coding (32%)**.",
+      "inputs": {
+        "region": "United States",
+        "weak_topics": ["API", "Coding", "Reasoning", "Speed", "Safety"]
+      }
+    },
+    {
+      "team": "Web",
+      "agent": "seo_refresh",
+      "text": "refresh under-cited **owned pages** (openai.com, chatgpt.com) so engines cite us over **reddit/youtube/medium**.",
+      "inputs": {
+        "region": "United States",
+        "owned_domains": ["openai.com", "chatgpt.com"]
+      }
+    },
+    {
+      "team": "Technical",
+      "agent": "seo_engine",
+      "text": "lift owned-citation share on the engines where we're weakest: **Google Gemini (0.8%)** and **Perplexity (0.9%)**.",
+      "inputs": {
+        "region": "United States",
+        "weak_engines": ["Google Gemini", "Perplexity", "Google AI Overviews", "ChatGPT"]
+      }
+    }
+  ],
+  "context": {
+    "lens": "product",
+    "region": "United States",
+    "owned": "ChatGPT"
+  }
+}

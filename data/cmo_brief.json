@@ -1,0 +1,426 @@
+{
+  "brief": {
+    "headline_number": {
+      "label": "ChatGPT rank in product pack",
+      "value": "#5 of 12, 0.0527 SoV vs leader Claude 0.071",
+      "why": "Our flagship asset trails four rivals (Claude, Google, OpenAI, Gemini); the SoV gap to the leader is only 0.0183, so the position is recoverable with focused investment."
+    },
+    "items": [
+      {
+        "title": "Net-negative sentiment on ChatGPT",
+        "severity": "red",
+        "finding": "Overall sentiment is net -403 (1,923 positive vs 2,326 negative across 4,249 occurrences), led by privacy concerns (-40) and accuracy/hallucination themes.",
+        "decision": "ESCALATE: fund a brand-risk narrative addressing privacy and accuracy perception before it caps visibility upside.",
+        "dispatch": "brand_risk_response"
+      },
+      {
+        "title": "Double-digit engine gaps on four surfaces",
+        "severity": "red",
+        "finding": "We trail the leader by 20.4pts on Microsoft Copilot (25.9 vs 46.3), 17.0pts on Google Gemini (49.1 vs 66.1), 13.1pts on Perplexity (15.4 vs 28.5), and 10.8pts on Google AI Mode (42.6 vs 53.4).",
+        "decision": "REALLOCATE engine-optimization effort toward Copilot and Perplexity where we rank #5 and the gaps are widest.",
+        "dispatch": "seo_citation_gap_closer"
+      },
+      {
+        "title": "Owned domains barely cited",
+        "severity": "amber",
+        "finding": "Best owned domain openai.com ranks only #5 of 8,192 (1.18% share) and chatgpt.com sits at #322 (0.04%); third-party sources reddit, youtube and medium outrank us.",
+        "decision": "FUND citation outreach so our own properties carry more weight than community sources.",
+        "dispatch": "pr_citation_outreach"
+      },
+      {
+        "title": "Coding is the weakest product topic",
+        "severity": "amber",
+        "finding": "Coding visibility is just 30.4 with citation rate 0.042 across 8 prompts \u2014 our lowest topic, alongside Reasoning at 36.3.",
+        "decision": "FUND topic-targeted content for Coding and Reasoning to lift visibility where we are most exposed.",
+        "dispatch": "seo_citation_gap_closer"
+      },
+      {
+        "title": "Recoverable distance to category leader",
+        "severity": "green",
+        "finding": "The SoV gap from ChatGPT (0.0527) to leader Claude (0.071) is only 0.0183, narrower than the full pack spread.",
+        "decision": "WORRY less about the headline rank; closing engine and citation gaps could move us past OpenAI, Google and Gemini who sit just ahead.",
+        "dispatch": "none"
+      }
+    ],
+    "north_star": {
+      "metric": "ChatGPT mean visibility (product lens, US)",
+      "value": "37.5 vs leader 49.9",
+      "note": "A 12.4pt visibility gap to Claude defines the gap to close across the six engines measured."
+    }
+  },
+  "facts": {
+    "lens": "product",
+    "region": "United States",
+    "owned_primary": "ChatGPT",
+    "owned_assets": [
+      "ChatGPT"
+    ],
+    "pack_position": {
+      "leaderboard": [
+        {
+          "asset_name": "Claude",
+          "mean_sov": 0.071,
+          "mean_vis": 49.9,
+          "engines": 6
+        },
+        {
+          "asset_name": "Google",
+          "mean_sov": 0.0601,
+          "mean_vis": 41.5,
+          "engines": 6
+        },
+        {
+          "asset_name": "OpenAI",
+          "mean_sov": 0.0581,
+          "mean_vis": 40.8,
+          "engines": 6
+        },
+        {
+          "asset_name": "Gemini",
+          "mean_sov": 0.057,
+          "mean_vis": 39.5,
+          "engines": 6
+        },
+        {
+          "asset_name": "ChatGPT",
+          "mean_sov": 0.0527,
+          "mean_vis": 37.5,
+          "engines": 6
+        },
+        {
+          "asset_name": "Anthropic",
+          "mean_sov": 0.0458,
+          "mean_vis": 33.0,
+          "engines": 6
+        },
+        {
+          "asset_name": "Microsoft",
+          "mean_sov": 0.024,
+          "mean_vis": 16.4,
+          "engines": 6
+        },
+        {
+          "asset_name": "GitHub",
+          "mean_sov": 0.0112,
+          "mean_vis": 7.4,
+          "engines": 6
+        },
+        {
+          "asset_name": "Groq",
+          "mean_sov": 0.0098,
+          "mean_vis": 6.7,
+          "engines": 6
+        },
+        {
+          "asset_name": "Cursor",
+          "mean_sov": 0.0097,
+          "mean_vis": 6.7,
+          "engines": 6
+        },
+        {
+          "asset_name": "DeepSeek",
+          "mean_sov": 0.0092,
+          "mean_vis": 6.6,
+          "engines": 6
+        },
+        {
+          "asset_name": "Perplexity",
+          "mean_sov": 0.0087,
+          "mean_vis": 6.0,
+          "engines": 6
+        }
+      ],
+      "leader": {
+        "asset": "Claude",
+        "mean_sov": 0.071,
+        "mean_vis": 49.9
+      },
+      "our_best": {
+        "asset": "ChatGPT",
+        "mean_sov": 0.0527,
+        "mean_vis": 37.5
+      },
+      "our_rank": 5,
+      "ahead": [
+        "Claude",
+        "Google",
+        "OpenAI",
+        "Gemini"
+      ],
+      "pack_size": 442,
+      "min_engines": 4,
+      "pack_spread": 0.0183,
+      "house_share": 0.0527,
+      "house_assets": [
+        "ChatGPT"
+      ],
+      "sov_gap_to_leader": 0.0183
+    },
+    "engine_gap": [
+      {
+        "engine": "Microsoft Copilot",
+        "our_vis": 25.9,
+        "our_rank": 5,
+        "leader": "Claude",
+        "leader_vis": 46.3,
+        "gap_pts": 20.4
+      },
+      {
+        "engine": "Google Gemini",
+        "our_vis": 49.1,
+        "our_rank": 6,
+        "leader": "Claude",
+        "leader_vis": 66.1,
+        "gap_pts": 17.0
+      },
+      {
+        "engine": "Perplexity",
+        "our_vis": 15.4,
+        "our_rank": 5,
+        "leader": "Google",
+        "leader_vis": 28.5,
+        "gap_pts": 13.1
+      },
+      {
+        "engine": "Google AI Mode",
+        "our_vis": 42.6,
+        "our_rank": 4,
+        "leader": "Claude",
+        "leader_vis": 53.4,
+        "gap_pts": 10.8
+      },
+      {
+        "engine": "Google AI Overviews",
+        "our_vis": 44.2,
+        "our_rank": 3,
+        "leader": "Claude",
+        "leader_vis": 53.8,
+        "gap_pts": 9.6
+      },
+      {
+        "engine": "ChatGPT",
+        "our_vis": 47.9,
+        "our_rank": 2,
+        "leader": "Claude",
+        "leader_vis": 56.9,
+        "gap_pts": 9.1
+      }
+    ],
+    "weak_topics": [
+      {
+        "topic": "Coding",
+        "avg_vis": 30.4,
+        "avg_cit": 0.042,
+        "prompts": 8
+      },
+      {
+        "topic": "Reasoning",
+        "avg_vis": 36.3,
+        "avg_cit": 0.062,
+        "prompts": 4
+      },
+      {
+        "topic": "Enterprise",
+        "avg_vis": 48.9,
+        "avg_cit": 0.041,
+        "prompts": 8
+      },
+      {
+        "topic": "Safety",
+        "avg_vis": 54.5,
+        "avg_cit": 0.058,
+        "prompts": 7
+      },
+      {
+        "topic": "Speed",
+        "avg_vis": 57.1,
+        "avg_cit": 0.05,
+        "prompts": 4
+      }
+    ],
+    "sentiment": {
+      "overall": {
+        "asset_name": "ChatGPT",
+        "pos": 1923.0,
+        "neg": 2326.0,
+        "net": -403.0,
+        "occ": 4249
+      },
+      "negative_themes": [
+        {
+          "theme": "privacy concerns",
+          "net": -40.0,
+          "occ": 40
+        },
+        {
+          "theme": "data privacy concerns",
+          "net": -18.0,
+          "occ": 18
+        },
+        {
+          "theme": "accuracy issues",
+          "net": -17.0,
+          "occ": 17
+        },
+        {
+          "theme": "hallucinations",
+          "net": -16.0,
+          "occ": 16
+        },
+        {
+          "theme": "confident hallucinations",
+          "net": -10.0,
+          "occ": 10
+        },
+        {
+          "theme": "too expensive for casual users",
+          "net": -8.0,
+          "occ": 8
+        },
+        {
+          "theme": "accuracy concerns",
+          "net": -6.0,
+          "occ": 6
+        },
+        {
+          "theme": "concerns about accuracy",
+          "net": -6.0,
+          "occ": 6
+        }
+      ]
+    },
+    "owned_domain": {
+      "owned": [
+        {
+          "domain": "openai.com",
+          "rank": 5,
+          "cites": 804,
+          "share_pct": 1.18
+        },
+        {
+          "domain": "chatgpt.com",
+          "rank": 322,
+          "cites": 29,
+          "share_pct": 0.04
+        }
+      ],
+      "best_rank": 5,
+      "domains_in_category": 8192,
+      "top_third_party": [
+        "reddit.com",
+        "youtube.com",
+        "medium.com",
+        "linkedin.com",
+        "openai.com"
+      ]
+    }
+  },
+  "breaches": [
+    {
+      "type": "engine_gap",
+      "detail": "4 engine(s) \u226510pt gap to leader",
+      "engines": [
+        "Microsoft Copilot",
+        "Google Gemini",
+        "Perplexity",
+        "Google AI Mode"
+      ],
+      "topics": [
+        "Coding",
+        "Reasoning",
+        "Enterprise",
+        "Safety",
+        "Speed"
+      ]
+    },
+    {
+      "type": "negative_sentiment_theme",
+      "detail": "net -403 overall; 8 net-negative theme(s)",
+      "themes": [
+        "privacy concerns",
+        "data privacy concerns",
+        "accuracy issues",
+        "hallucinations",
+        "confident hallucinations",
+        "too expensive for casual users",
+        "accuracy concerns",
+        "concerns about accuracy"
+      ]
+    },
+    {
+      "type": "owned_domain_undercited",
+      "detail": "owned domain best rank 5 of 8192",
+      "domains": [
+        "openai.com",
+        "chatgpt.com"
+      ],
+      "top_third_party": [
+        "reddit.com",
+        "youtube.com",
+        "medium.com",
+        "linkedin.com",
+        "openai.com"
+      ]
+    }
+  ],
+  "dispatch": [
+    {
+      "agent": "seo_citation_gap_closer",
+      "status": "would_dispatch",
+      "inputs": {
+        "region": "United States",
+        "weak_engines": [
+          "Microsoft Copilot",
+          "Google Gemini",
+          "Perplexity",
+          "Google AI Mode"
+        ],
+        "weak_topics": [
+          "Coding",
+          "Reasoning",
+          "Enterprise",
+          "Safety",
+          "Speed"
+        ]
+      },
+      "note": "no such agent in org yet \u2014 build the graph in Profound Agent Builder, then this run goes live"
+    },
+    {
+      "agent": "brand_risk_response",
+      "status": "would_dispatch",
+      "inputs": {
+        "region": "United States",
+        "negative_themes": [
+          "privacy concerns",
+          "data privacy concerns",
+          "accuracy issues",
+          "hallucinations",
+          "confident hallucinations",
+          "too expensive for casual users",
+          "accuracy concerns",
+          "concerns about accuracy"
+        ]
+      },
+      "note": "no such agent in org yet \u2014 build the graph in Profound Agent Builder, then this run goes live"
+    },
+    {
+      "agent": "pr_citation_outreach",
+      "status": "would_dispatch",
+      "inputs": {
+        "region": "United States",
+        "owned_domains": [
+          "openai.com",
+          "chatgpt.com"
+        ],
+        "top_third_party": [
+          "reddit.com",
+          "youtube.com",
+          "medium.com",
+          "linkedin.com",
+          "openai.com"
+        ]
+      },
+      "note": "no such agent in org yet \u2014 build the graph in Profound Agent Builder, then this run goes live"
+    }
+  ]
+}

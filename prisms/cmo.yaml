@@ -43,10 +43,35 @@ slices:
     metrics: [positive, negative, occurrences]
     period_delta: true
 
-  # AI-driven traffic as a commercial leading indicator
+  # AI-driven traffic as a commercial leading indicator.
+  # NOTE: the current snapshot has NO referrals/bots table — this slice is dark
+  # until that source is connected. The visibility→revenue tie (Max's $1M fix)
+  # is blocked on it; the orchestrator must not fabricate a commercial outcome.
   - report: referrals
     dimensions: [domain]
     metrics: [count]
     period_delta: true
 
 writes_prompts: false
+
+# ── Orchestrator config (CMO is the router) ──────────────────────────────────
+# Single snapshot = no deltas, so every gate is LEVEL-based. A breach produces
+# an escalation item in the brief AND fires the matching dispatch rule.
+thresholds:
+  engine_gap_pts: 10       # gap to category leader on an engine that warrants a fund/reallocate flag
+  net_sentiment: 0         # net (positive − negative) below this on a theme = reputation escalation
+  pack_spread_pts: 0.03    # top-pack mean-SoV spread below this → frame the race as "winnable"
+  visibility_rank_max: 3   # owned rank worse than this in a (model,region) = competitive concern
+
+# CMO → specialist hand-offs. `agent` is resolved by NAME against the live org
+# at run time; until that graph exists the run is recorded as `would_dispatch`.
+dispatch:
+  - when: engine_gap                 # weak engines/topics → close the citation gap
+    agent: seo_citation_gap_closer
+    scope: topic
+  - when: negative_sentiment_theme   # net-negative themes → draft the comms response
+    agent: brand_risk_response
+    scope: theme
+  - when: owned_domain_undercited    # owned domain under-cited → press outreach
+    agent: pr_citation_outreach
+    scope: domain

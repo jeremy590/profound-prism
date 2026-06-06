@@ -1,0 +1,71 @@
+{
+  "summary": [
+    "ChatGPT sits **#5** in the frontier-model pack on share of voice, only **0.018** behind **Claude**. But counted as one house, the OpenAI family (ChatGPT + OpenAI) combines for **0.111 SoV**, enough that it **would top the category**. The race is **winnable**.",
+    "The real issue is quality and concentration, not headline rank. AI engines describe us **net-negatively (-403)** while they describe Claude **positively**. The visibility gap is widest on **Microsoft Copilot**, where we trail by **20 points**, not on ChatGPT itself."
+  ],
+  "actions": [
+    {
+      "team": "Brand",
+      "agent": "brand_risk_response",
+      "text": "review the **sentiment gap (-403)** and the themes driving it: **privacy concerns, data privacy concerns**.",
+      "inputs": {
+        "region": "United States",
+        "negative_themes": [
+          "privacy concerns",
+          "data privacy concerns",
+          "accuracy issues",
+          "hallucinations",
+          "confident hallucinations",
+          "too expensive for casual users",
+          "accuracy concerns",
+          "concerns about accuracy"
+        ]
+      }
+    },
+    {
+      "team": "SEO",
+      "agent": "seo_citation_gap_closer",
+      "text": "close the citation gap where we are weakest: **Microsoft Copilot** and the **API and Coding** topics.",
+      "inputs": {
+        "region": "United States",
+        "weak_engines": [
+          "Microsoft Copilot",
+          "Google Gemini",
+          "Perplexity",
+          "Google AI Mode"
+        ],
+        "weak_topics": [
+          "API",
+          "Coding",
+          "Reasoning",
+          "Speed",
+          "Safety"
+        ]
+      }
+    },
+    {
+      "team": "PR",
+      "agent": "pr_citation_outreach",
+      "text": "our own pages barely get cited (**openai.com #5**); pitch the third-party domains shaping the category.",
+      "inputs": {
+        "region": "United States",
+        "owned_domains": [
+          "openai.com",
+          "chatgpt.com"
+        ],
+        "top_third_party": [
+          "reddit.com",
+          "youtube.com",
+          "medium.com",
+          "linkedin.com",
+          "openai.com"
+        ]
+      }
+    }
+  ],
+  "context": {
+    "lens": "product",
+    "region": "United States",
+    "owned": "ChatGPT"
+  }
+}

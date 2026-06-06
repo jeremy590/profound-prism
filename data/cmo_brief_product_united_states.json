@@ -1,0 +1,227 @@
+{
+  "brief": {
+    "headline_number": {
+      "label": "SoV gap to category leader (Claude)",
+      "value": "0.018 SoV pts",
+      "why": "#5 by share of voice, behind Claude, Google, OpenAI, Gemini; house share 0.053."
+    },
+    "items": [
+      {
+        "title": "Biggest visibility gap is on Microsoft Copilot, not our home engine",
+        "severity": "red",
+        "finding": "20.4pt gap to Claude on Microsoft Copilot (rank 5).",
+        "decision": "Reallocate AEO effort to the worst engines, not the strongest.",
+        "dispatch": "seo_citation_gap_closer"
+      },
+      {
+        "title": "AI characterises us net-negatively",
+        "severity": "red",
+        "finding": "Net sentiment -403 (1923 pos / 2326 neg).",
+        "decision": "Escalate as a reputation risk; brief comms on the worst themes.",
+        "dispatch": "brand_risk_response"
+      },
+      {
+        "title": "Weakest topics are API, Coding",
+        "severity": "amber",
+        "finding": "API visibility is only 25.0 (citation 0.016) \u2014 our lowest.",
+        "decision": "Fund topic-targeted content for API, Coding.",
+        "dispatch": "seo_citation_gap_closer"
+      },
+      {
+        "title": "Our own domains barely get cited",
+        "severity": "amber",
+        "finding": "Best owned domain openai.com ranks #5 of 8192 (1.18% share); third-party sources (reddit.com, youtube.com, medium.com) dominate.",
+        "decision": "Fund citation outreach so our properties carry more of the narrative.",
+        "dispatch": "pr_citation_outreach"
+      },
+      {
+        "title": "The race is winnable \u2014 the leading pack is tightly bunched",
+        "severity": "green",
+        "finding": "#5 by share of voice (behind Claude, Google, OpenAI, Gemini); top-5 SoV spread only 0.018.",
+        "decision": "Fund now while the gap is closeable, not after it widens.",
+        "dispatch": "none"
+      }
+    ],
+    "north_star": {
+      "metric": "net-sentiment-adjusted SoV vs category leader",
+      "value": "SoV 0.053 @ net -403",
+      "note": "Interim \u2014 swap to a revenue-tied metric once referrals/GA4 is connected (no referrals table in this snapshot)."
+    }
+  },
+  "condensed": {
+    "summary": [
+      "ChatGPT sits **#5** in the frontier-model pack on share of voice, only **0.018** behind **Claude**. But counted as one house, the OpenAI family (ChatGPT + OpenAI) combines for **0.111 SoV**, enough that it **would top the category**. The race is **winnable**.",
+      "The real issue is quality and concentration, not headline rank. AI engines describe us **net-negatively (-403)** while they describe Claude **positively**. The visibility gap is widest on **Microsoft Copilot**, where we trail by **20 points**, not on ChatGPT itself."
+    ],
+    "actions": [
+      {
+        "team": "Brand",
+        "agent": "brand_risk_response",
+        "text": "review the **sentiment gap (-403)** and the themes driving it: **privacy concerns, data privacy concerns**.",
+        "inputs": {
+          "region": "United States",
+          "negative_themes": [
+            "privacy concerns",
+            "data privacy concerns",
+            "accuracy issues",
+            "hallucinations",
+            "confident hallucinations",
+            "too expensive for casual users",
+            "accuracy concerns",
+            "concerns about accuracy"
+          ]
+        }
+      },
+      {
+        "team": "SEO",
+        "agent": "seo_citation_gap_closer",
+        "text": "close the citation gap where we are weakest: **Microsoft Copilot** and the **API and Coding** topics.",
+        "inputs": {
+          "region": "United States",
+          "weak_engines": [
+            "Microsoft Copilot",
+            "Google Gemini",
+            "Perplexity",
+            "Google AI Mode"
+          ],
+          "weak_topics": [
+            "API",
+            "Coding",
+            "Reasoning",
+            "Speed",
+            "Safety"
+          ]
+        }
+      },
+      {
+        "team": "PR",
+        "agent": "pr_citation_outreach",
+        "text": "our own pages barely get cited (**openai.com #5**); pitch the third-party domains shaping the category.",
+        "inputs": {
+          "region": "United States",
+          "owned_domains": [
+            "openai.com",
+            "chatgpt.com"
+          ],
+          "top_third_party": [
+            "reddit.com",
+            "youtube.com",
+            "medium.com",
+            "linkedin.com",
+            "openai.com"
+          ]
+        }
+      }
+    ]
+  },
+  "breaches": [
+    {
+      "type": "engine_gap",
+      "detail": "4 engine(s) \u226510pt gap to leader",
+      "engines": [
+        "Microsoft Copilot",
+        "Google Gemini",
+        "Perplexity",
+        "Google AI Mode"
+      ],
+      "topics": [
+        "API",
+        "Coding",
+        "Reasoning",
+        "Speed",
+        "Safety"
+      ]
+    },
+    {
+      "type": "negative_sentiment_theme",
+      "detail": "net -403 overall; 8 net-negative theme(s)",
+      "themes": [
+        "privacy concerns",
+        "data privacy concerns",
+        "accuracy issues",
+        "hallucinations",
+        "confident hallucinations",
+        "too expensive for casual users",
+        "accuracy concerns",
+        "concerns about accuracy"
+      ]
+    },
+    {
+      "type": "owned_domain_undercited",
+      "detail": "owned domain best rank 5 of 8192",
+      "domains": [
+        "openai.com",
+        "chatgpt.com"
+      ],
+      "top_third_party": [
+        "reddit.com",
+        "youtube.com",
+        "medium.com",
+        "linkedin.com",
+        "openai.com"
+      ]
+    }
+  ],
+  "dispatch": [
+    {
+      "agent": "seo_citation_gap_closer",
+      "status": "planned",
+      "inputs": {
+        "region": "United States",
+        "weak_engines": [
+          "Microsoft Copilot",
+          "Google Gemini",
+          "Perplexity",
+          "Google AI Mode"
+        ],
+        "weak_topics": [
+          "API",
+          "Coding",
+          "Reasoning",
+          "Speed",
+          "Safety"
+        ]
+      }
+    },
+    {
+      "agent": "brand_risk_response",
+      "status": "planned",
+      "inputs": {
+        "region": "United States",
+        "negative_themes": [
+          "privacy concerns",
+          "data privacy concerns",
+          "accuracy issues",
+          "hallucinations",
+          "confident hallucinations",
+          "too expensive for casual users",
+          "accuracy concerns",
+          "concerns about accuracy"
+        ]
+      }
+    },
+    {
+      "agent": "pr_citation_outreach",
+      "status": "planned",
+      "inputs": {
+        "region": "United States",
+        "owned_domains": [
+          "openai.com",
+          "chatgpt.com"
+        ],
+        "top_third_party": [
+          "reddit.com",
+          "youtube.com",
+          "medium.com",
+          "linkedin.com",
+          "openai.com"
+        ]
+      }
+    }
+  ],
+  "context": {
+    "lens": "product",
+    "region": "United States",
+    "owned": "ChatGPT"
+  }
+}

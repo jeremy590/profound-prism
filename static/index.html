@@ -1,0 +1,1421 @@
+<!-- @startingPoint section="Prism" subtitle="AEO analytics — global brand/engine/region context, Overview + role-lens Prism with agent actions" viewport="1440x1024" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prism — AI Visibility</title>
+<link rel="icon" type="image/svg+xml" href="/assets/logos/prism-favicon.svg">
+<style>
+  /* Fonts from the Profound system (Inter / JetBrains Mono); graceful system fallback. */
+  @font-face { font-family:"Inter"; font-weight:400; font-display:swap; src:url("../assets/fonts/inter-400.woff2") format("woff2"); }
+  @font-face { font-family:"Inter"; font-weight:500; font-display:swap; src:url("../assets/fonts/inter-500.woff2") format("woff2"); }
+  @font-face { font-family:"Inter"; font-weight:600; font-display:swap; src:url("../assets/fonts/inter-600.woff2") format("woff2"); }
+  @font-face { font-family:"Inter"; font-weight:700; font-display:swap; src:url("../assets/fonts/inter-700.woff2") format("woff2"); }
+  @font-face { font-family:"JetBrains Mono"; font-weight:400; font-display:swap; src:url("../assets/fonts/jetbrains-mono-400.woff2") format("woff2"); }
+  @font-face { font-family:"JetBrains Mono"; font-weight:500; font-display:swap; src:url("../assets/fonts/jetbrains-mono-500.woff2") format("woff2"); }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --text-primary: #0E0E10;
+    --text-secondary: #6B6E76;
+    --text-tertiary: #9A9DA4;
+    --accent: #376CFF;
+    --accent-hover: #2C5BE0;
+    --blue-tint: rgba(55,108,255,0.12);
+    --blue-ring: rgba(55,108,255,0.40);
+    --green: #2E9E63;
+    --amber: #B8860B;
+    --red: #D24B4B;
+    --red-tint: rgba(210,75,75,0.10);
+    --surface-2: #EFEFF1;
+    --border-subtle: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-pill: 999px;
+    --duration-fast: 120ms;
+
+    --topbar-h: 60px;
+    --brandbar-h: 54px;
+    --stick: 114px; /* topbar + brandbar */
+    --prism-bar-ink: #2A2B30;
+    --prism-page: #FBFBFC;
+    --prism-hair: rgba(0,0,0,0.07);
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--prism-page); color: var(--text-primary); font-family: var(--font-sans); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  #root { min-height: 100%; }
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--topbar-h); box-sizing: border-box;
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 24px; background: rgba(255,255,255,0.88); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; flex: none; }
+  .brand__mark { width: 26px; height: 26px; display: grid; place-items: center; color: var(--text-primary); }
+  .brand__mark svg { width: 22px; height: 22px; }
+  .brand__name { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+  .brand__set { font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 0.02em; margin-top: 2px; }
+  .topbar__spacer { flex: 1; }
+
+  /* context selectors */
+  .selrow { display: flex; align-items: center; gap: 10px; flex: none; }
+  .sel { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 30px 0 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: #fff; cursor: pointer; }
+  .sel:hover { background: #FAFAFB; }
+  .sel--brand { border-color: var(--accent); box-shadow: 0 0 0 3px var(--blue-tint); }
+  .sel__k { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-tertiary); }
+  .sel__v { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .sel select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .sel__chev { position: absolute; right: 10px; color: var(--text-tertiary); pointer-events: none; display: flex; }
+  .sel__chev svg { width: 13px; height: 13px; }
+  .owntag { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); background: var(--blue-tint); border-radius: var(--radius-pill); padding: 2px 6px; }
+  .snap { display: inline-flex; align-items: center; gap: 7px; flex: none; height: 28px; padding: 0 11px; border-radius: var(--radius-pill); border: 1px solid var(--border-subtle); background: var(--surface-2); font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+  .snap__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .snap .num { font-size: 11.5px; color: var(--text-primary); }
+
+  /* ---------- Nav (Overview | Prism) — segmented control in the top bar ---------- */
+  .navset { display: inline-flex; flex: none; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 3px; gap: 2px; }
+  .navtab { height: 30px; padding: 0 16px; border: none; background: none; border-radius: 7px; font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: background var(--duration-fast), color var(--duration-fast); }
+  .navtab:hover { color: var(--text-primary); }
+  .navtab--active { background: #fff; color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+  /* ---------- Brand bar — brand chips on the sub-layer below the top bar ---------- */
+  .brandbar { position: sticky; top: var(--topbar-h); z-index: 45; height: var(--brandbar-h); display: flex; align-items: center; gap: 12px; padding: 0 24px; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); }
+  .brandbar__k { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); flex: none; }
+  .bstrip { display: flex; align-items: center; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px; }
+  .bstrip::-webkit-scrollbar { display: none; }
+  .bchip { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px 0 7px; border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); background: #fff; cursor: pointer; font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; flex: none; transition: border-color var(--duration-fast), background var(--duration-fast), color var(--duration-fast); }
+  .bchip:hover { background: #FAFAFB; color: var(--text-primary); }
+  .bchip--active { border-color: var(--accent); background: var(--blue-tint); color: var(--text-primary); font-weight: 600; }
+  .bmono { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; flex: none; }
+  .bchip--plain { padding: 0 14px; }
+  .bchip .owntag { margin-left: 1px; }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px 96px; }
+  .section { margin-top: 10px; }
+  .section__head { position: sticky; top: var(--stick); z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 16px 0 12px; margin-bottom: 14px; background: var(--prism-page); border-bottom: 1px solid var(--border-subtle); }
+  .section__title { display: flex; align-items: baseline; gap: 10px; }
+  .section__title h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .section__count { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; }
+
+  .tiles { display: grid; gap: 16px; }
+  .tiles--kpi { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .tiles--split { grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); align-items: start; }
+  .tiles--single { grid-template-columns: 1fr; }
+
+  /* ---------- Tile ---------- */
+  .tile { background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px 20px 16px; }
+  .tile__title { font-size: 13px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .tile__title .sub { font-size: 11px; font-weight: 500; color: var(--text-tertiary); }
+  .tile__body { margin-bottom: 14px; }
+  .tile__insight { display: flex; gap: 9px; font-size: 13px; color: var(--text-primary); line-height: 1.45; }
+  .tile__insight .d { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none; }
+  .tile__caveat { font-size: 11.5px; color: var(--text-tertiary); margin-top: 7px; padding-left: 15px; line-height: 1.4; }
+
+  .kpi__val { font-size: 40px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .kpi__label { font-size: 13px; color: var(--text-secondary); margin-top: 9px; }
+  .kpi__cap { font-size: 11.5px; color: var(--text-tertiary); margin-top: 6px; }
+
+  table.dt { width: 100%; border-collapse: collapse; }
+  table.dt th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-tertiary); padding: 0 12px 9px; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+  table.dt td { padding: 9px 12px; border-bottom: 1px solid var(--prism-hair); font-size: 13.5px; vertical-align: middle; }
+  table.dt tr:last-child td { border-bottom: none; }
+  table.dt td.n, table.dt th.n { text-align: right; }
+  table.dt td.n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-primary); }
+  table.dt td.rank { color: var(--text-tertiary); font-family: var(--font-mono); width: 28px; }
+  table.dt td.lbl { font-weight: 500; }
+  table.dt td.muted { color: var(--text-secondary); }
+  table.dt tbody tr:hover { background: #FAFAFB; }
+  tr.hl td { background: var(--blue-tint); }
+  tr.hl:hover td { background: var(--blue-tint); }
+  .tag { display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; border-radius: var(--radius-pill); padding: 1px 7px; vertical-align: middle; white-space: nowrap; }
+  .tag--owned { color: var(--accent); background: #fff; border: 1px solid var(--blue-ring); }
+  .tag--sel { color: var(--accent); background: var(--blue-tint); }
+
+  /* bars */
+  .bars { display: flex; flex-direction: column; gap: 9px; }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 14px; }
+  .bar-row__lbl { font-size: 13px; color: var(--text-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-row__track { display: flex; align-items: center; gap: 9px; }
+  .bar-row__fill { height: 16px; border-radius: 3px; background: var(--prism-bar-ink); min-width: 2px; }
+  .bar-row__val { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--text-primary); flex: none; }
+
+  .dleg { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .dleg span { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); }
+  .dleg i { width: 11px; height: 11px; border-radius: 3px; }
+  .drow { display: grid; grid-template-columns: 170px 1fr; align-items: center; gap: 14px; padding: 6px 0; }
+  .drow__lbl { font-size: 13px; color: var(--text-secondary); text-align: right; }
+  .dchart { position: relative; }
+  .dchart::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border-strong); }
+  .dbar-wrap { position: relative; height: 13px; margin: 2.5px 0; }
+  .dbar { position: absolute; height: 100%; border-radius: 3px; min-width: 1px; }
+  .dval { position: absolute; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-secondary); }
+  .daxis { display: flex; justify-content: space-between; margin-top: 8px; padding-left: 184px; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); }
+
+  /* chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: var(--radius-pill); border: 1px solid var(--border-subtle); background: var(--surface-2); font-size: 13px; color: var(--text-primary); }
+  .chip--risk { background: var(--red-tint); border-color: transparent; color: var(--red); }
+  .chip--pos { background: rgba(46,158,99,0.10); border-color: transparent; color: var(--green); }
+
+  /* empty */
+  .empty { padding: 28px 16px; text-align: center; color: var(--text-tertiary); font-size: 13px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); }
+
+  /* ---------- Prism role header ---------- */
+  .role { background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px 22px; margin-top: 14px; }
+  .role__top { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+  .role__pick { position: relative; display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 34px 0 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: #fff; cursor: pointer; }
+  .role__pick:hover { background: #FAFAFB; }
+  .role__pick select { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+  .role__pick .sel__chev { right: 12px; }
+  .role__name { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .role__role { font-size: 11px; color: var(--text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .role__goal { font-size: 14px; color: var(--text-secondary); margin: 10px 0 14px; max-width: 760px; line-height: 1.5; }
+  .qchips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .qchip { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: var(--radius-pill); background: var(--surface-2); font-size: 12.5px; color: var(--text-secondary); }
+  .qchip .q { color: var(--accent); font-weight: 700; }
+
+  .subtabs { display: flex; gap: 4px; margin: 18px 0 4px; border-bottom: 1px solid var(--border-subtle); }
+  .subtab { position: relative; padding: 0 4px 10px; margin-right: 18px; background: none; border: none; cursor: pointer; font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; color: var(--text-tertiary); }
+  .subtab:hover { color: var(--text-primary); }
+  .subtab--active { color: var(--text-primary); }
+  .subtab--active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); }
+
+  /* ---------- Action cards ---------- */
+  .acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-top: 16px; }
+  .act { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px 20px; }
+  .act__title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .act__desc { font-size: 13px; color: var(--text-secondary); margin: 8px 0 12px; line-height: 1.45; flex: 1; }
+  .act__inputs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .act__chip { font-size: 11.5px; color: var(--text-secondary); background: var(--surface-2); border-radius: var(--radius-pill); padding: 3px 9px; }
+  .act__chip b { color: var(--text-primary); font-weight: 600; }
+  .act__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .runstat { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 500; }
+  .runstat--running { color: var(--accent); }
+  .runstat--done { color: var(--green); }
+  .statdot { width: 7px; height: 7px; border-radius: 50%; }
+  .result { margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 14px; }
+  .result__sum { font-size: 13.5px; color: var(--text-primary); line-height: 1.45; }
+  .result__prev { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); background: var(--surface-2); border-radius: var(--radius-md); padding: 11px 13px; margin-top: 10px; white-space: pre-wrap; line-height: 1.55; }
+  .result__meta { display: flex; align-items: center; gap: 10px; margin-top: 11px; font-size: 11.5px; color: var(--text-tertiary); }
+  .result__id { font-family: var(--font-mono); }
+
+  /* full-screen action run */
+  .modal { position: fixed; inset: 0; z-index: 200; background: rgba(14,14,16,0.42); backdrop-filter: blur(3px); display: flex; align-items: stretch; justify-content: center; padding: 28px; animation: modalin var(--duration-fast) ease-out; }
+  @keyframes modalin { from { opacity: 0; } to { opacity: 1; } }
+  .modal__panel { background: var(--prism-page); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); width: min(1080px, 100%); max-height: 100%; display: flex; flex-direction: column; box-shadow: 0 24px 70px rgba(0,0,0,0.28); overflow: hidden; }
+  .modal__head { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); background: #fff; }
+  .modal__head h2 { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+  .modal__sub { font-size: 12.5px; color: var(--text-tertiary); }
+  .modal__x { margin-left: auto; flex: none; width: 32px; height: 32px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: #fff; cursor: pointer; font-size: 15px; color: var(--text-secondary); line-height: 1; }
+  .modal__x:hover { background: var(--surface-2); }
+  .modal__body { padding: 22px 24px; overflow-y: auto; }
+  .modal__foot { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--border-subtle); background: #fff; }
+  .modal__foot .result__id { margin-right: auto; font-size: 11.5px; color: var(--text-tertiary); }
+  .runblock { margin-top: 20px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+  .runblock__head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface-2); border-bottom: 1px solid var(--border-subtle); }
+  .runblock__head h3 { font-size: 13.5px; font-weight: 650; margin: 0; }
+  .runblock__cfg { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 0; }
+  .runblock__report { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.6; padding: 14px 16px; }
+  .badge { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border-radius: var(--radius-pill); padding: 2px 9px; }
+  .badge--ok { color: var(--green); background: rgba(46,158,99,0.12); }
+  .badge--run { color: var(--accent); background: var(--blue-tint); }
+  .badge--err { color: var(--red); background: var(--red-tint); }
+  .mh { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 60px 0; color: var(--text-secondary); }
+
+  /* interactive tile controls (topic filters / sort / expandable rows) */
+  .tctl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 14px; }
+  .tpill { font-size: 12px; font-weight: 500; color: var(--text-secondary); background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: 4px 11px; cursor: pointer; transition: all var(--duration-fast); }
+  .tpill:hover { border-color: var(--border-strong); }
+  .tpill--on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sortbtn { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--blue-tint); border: none; border-radius: var(--radius-pill); padding: 5px 11px; cursor: pointer; }
+  table.dt tr.clickable { cursor: pointer; }
+  table.dt tr.clickable:hover { background: var(--blue-tint); }
+  table.dt td .caret { color: var(--text-tertiary); font-size: 11px; }
+  .promptlist { background: var(--surface-2); border-radius: var(--radius-md); padding: 10px 14px; margin: 4px 0 2px; }
+  .promptlist li { font-size: 13px; color: var(--text-secondary); line-height: 1.5; padding: 3px 0; list-style: none; }
+  .promptlist li:before { content: "·"; color: var(--text-tertiary); margin-right: 8px; }
+  .netpos { color: var(--green); font-weight: 600; }
+  .netneg { color: var(--red); font-weight: 600; }
+
+  /* ---------- Buttons ---------- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 15px; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: background var(--duration-fast), border-color var(--duration-fast), opacity var(--duration-fast); }
+  .btn--accent { background: var(--accent); color: #fff; }
+  .btn--accent:hover { background: var(--accent-hover); }
+  .btn--ghost { background: #fff; color: var(--text-primary); border-color: var(--border-strong); }
+  .btn--ghost:hover { background: var(--surface-2); }
+  .btn--sm { height: 30px; padding: 0 11px; font-size: 13px; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+  .btn svg { width: 14px; height: 14px; }
+
+  .spin { display: inline-flex; }
+  .spin svg { animation: pf-spin 0.8s linear infinite; width: 14px; height: 14px; }
+  @keyframes pf-spin { to { transform: rotate(360deg); } }
+  .skl { background: linear-gradient(90deg, #EEE 25%, #F5F5F6 50%, #EEE 75%); background-size: 200% 100%; animation: pf-shim 1.2s infinite; border-radius: 4px; }
+  @keyframes pf-shim { to { background-position: -200% 0; } }
+  .fade { animation: pf-fade var(--duration-fast) ease-out; }
+  @keyframes pf-fade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+/* =============================================================================
+   Prism — AI Visibility (AEO) analytics · a Profound product
+   Single point-in-time snapshot 2026-05-30 → 2026-06-06. NO trends, ever:
+   no deltas, growth %, arrows, sparklines or time-series. Present-state only.
+
+   GLOBAL CONTEXT  {brand, engine, region}  drives every view (Overview + Prism)
+   and persists across views. The brand selected anywhere stays selected.
+
+   DATA LAYER — one swappable module. Today returns mock data keyed by context;
+   later maps to a backend:
+       api.getOverview({brand, engine, region})        -> GET  /api/overview
+       api.getPrism({role, brand, engine, region})     -> GET  /api/prism/<role>
+       api.getActions({role, brand, engine, region})   -> GET  /api/prism/<role>/actions
+       api.runAction(actionId, ctx)                     -> POST /api/actions/<id>/run
+   Units: visibility_score / share_of_voice / citation_share are raw 0–1 → shown
+   ×100 as %. average_position lower = better (1 first). visibility_rank /
+   citation_rank: 1 = best, within the selected engine+region. sentiment net =
+   positive − negative (weighted). citation_category ∈ {other, social,
+   earned_media, earned_institutions, owned, competition, pr_wire}.
+   No data is hardcoded inside components — everything flows from `api`.
+   ========================================================================== */
+
+const SNAPSHOT = { from: "2026-05-30", to: "2026-06-06" };
+
+const BRAND_OPTIONS = ["ChatGPT", "Claude", "Gemini", "OpenAI", "Perplexity", "Copilot", "Llama", "Mistral", "Grok", "DeepSeek"];
+const ENGINE_OPTIONS = ["ChatGPT", "Google Gemini", "Google AI Mode", "Google AI Overviews", "Perplexity", "Microsoft Copilot"];
+const REGION_OPTIONS = ["United States", "United Kingdom", "Canada"];
+const OWNED_BRAND = "ChatGPT";
+
+/* base leaderboard — asset_name: [visibility_score%, share_of_voice%, avg_position, mentions] in ChatGPT / US */
+const BRAND_BASE = {
+  Claude:     [57.2, 24.1, 2.3, 4120],
+  ChatGPT:    [49.8, 18.4, 2.9, 3380],
+  Gemini:     [41.5, 15.2, 3.4, 2210],
+  OpenAI:     [33.0, 11.8, 3.8, 1870],
+  Perplexity: [22.6, 7.9, 4.5, 1290],
+  Llama:      [18.1, 5.4, 5.1, 1110],
+  Mistral:    [14.7, 4.2, 5.6, 980],
+  Copilot:    [12.3, 3.1, 6.0, 760],
+  Grok:       [9.8, 2.4, 6.4, 520],
+  DeepSeek:   [7.1, 1.9, 6.9, 430],
+};
+
+const ENGINE_F = { "ChatGPT": 1.0, "Google Gemini": 0.92, "Google AI Mode": 0.86, "Google AI Overviews": 0.89, "Perplexity": 0.83, "Microsoft Copilot": 0.78 };
+const REGION_F = { "United States": 1.0, "United Kingdom": 0.94, "Canada": 0.90 };
+
+/* net sentiment by theme — base = Claude; other brands scaled by SENT_F */
+const SENT_BASE = [
+  ["Coherent Argumentation", 42, 310],
+  ["Coding Ability", 38, 290],
+  ["Reasoning Depth", 35, 275],
+  ["Helpfulness", 30, 260],
+  ["Writing Quality", 28, 240],
+  ["Safety / Caution", 21, 200],
+  ["Speed", -8, 180],
+  ["Can Hallucinate and Err", -18, 220],
+  ["Verbosity", -14, 160],
+  ["Cost", -11, 150],
+];
+const SENT_F = { Claude: 1.0, ChatGPT: 0.92, Gemini: 0.83, OpenAI: 0.80, Perplexity: 0.78, Copilot: 0.74, Llama: 0.70, Mistral: 0.72, Grok: 0.60, DeepSeek: 0.66 };
+
+const CITE_CATS = [
+  ["social", 28.4], ["earned_media", 21.7], ["other", 18.2], ["owned", 13.5],
+  ["earned_institutions", 9.1], ["competition", 5.8], ["pr_wire", 3.3],
+];
+
+/* root_domain, base count, owners[], topic beat */
+const DOMAINS = [
+  ["reddit.com", 4120, [], "Coding"],
+  ["youtube.com", 3380, [], "Reviews"],
+  ["medium.com", 2210, [], "Tutorials"],
+  ["linkedin.com", 1870, [], "Careers"],
+  ["openai.com", 1540, ["ChatGPT", "OpenAI"], "Docs"],
+  ["arxiv.org", 1290, [], "Research"],
+  ["github.com", 1110, [], "Code"],
+  ["anthropic.com", 980, ["Claude"], "Docs"],
+  ["techcrunch.com", 760, [], "News"],
+  ["news.ycombinator.com", 690, [], "Community"],
+  ["wikipedia.org", 640, [], "Reference"],
+  ["substack.com", 520, [], "Opinion"],
+  ["theverge.com", 470, [], "News"],
+  ["stackoverflow.com", 430, [], "Code"],
+  ["x.com", 390, [], "Social"],
+];
+
+/* prompts — available for the owned brand only (vw_prompt_overview) */
+const PROMPTS = [
+  ["best AI model for coding", "Coding", "capability", 62.1, 4.2, 11, 540],
+  ["which AI reasons best on hard problems", "Reasoning", "capability", 58.7, 5.0, 10, 480],
+  ["best AI for building autonomous agents", "Agents", "use-case", 55.3, 3.8, 12, 460],
+  ["safest AI model", "Safety", "trust", 53.0, 6.1, 9, 420],
+  ["cheapest frontier model API", "Pricing", "commercial", 51.4, 2.9, 13, 400],
+  ["largest context window AI", "Context Window", "capability", 49.9, 4.5, 10, 380],
+  ["best multimodal AI", "Multimodal", "capability", 48.2, 3.3, 12, 360],
+  ["fastest AI model", "Speed", "capability", 46.7, 5.5, 8, 350],
+  ["best AI for enterprise", "Enterprise", "commercial", 42.0, 4.8, 9, 320],
+  ["most private AI assistant", "Privacy", "trust", 40.6, 2.7, 13, 300],
+];
+
+const CLUSTERS = [
+  ["AI coding assistant", 6, 58],
+  ["Autonomous agents", 4, 52],
+  ["Research & reasoning", 5, 49],
+  ["Writing & content", 4, 44],
+  ["Enterprise deployment", 3, 41],
+];
+const ADJACENT = ["Does it support MCP tools?", "How does it handle long documents?", "Can it run offline?", "What's the rate limit?"];
+
+const ATTRIBUTES = ["Thoughtful", "Safe", "Verbose", "Capable coder", "Strong reasoner", "Premium"];
+
+/* ---- context-aware computation ---- */
+function ctxFactor(engine, region) { return (ENGINE_F[engine] || 1) * (REGION_F[region] || 1); }
+
+function leaderboard(engine, region) {
+  const f = ctxFactor(engine, region);
+  const rows = Object.keys(BRAND_BASE).map((name) => {
+    const [vis, sov, pos, mentions] = BRAND_BASE[name];
+    return {
+      asset_name: name,
+      visibility_score: +(vis * f).toFixed(1),
+      share_of_voice: +(sov * f).toFixed(1),
+      average_position: +(pos * (1 + (1 - f) * 0.6)).toFixed(1),
+      mentions_count: Math.round(mentions * f),
+    };
+  });
+  rows.sort((a, b) => b.visibility_score - a.visibility_score);
+  rows.forEach((r, i) => (r.visibility_rank = i + 1));
+  return rows;
+}
+function brandRow(brand, engine, region) {
+  return leaderboard(engine, region).find((r) => r.asset_name === brand);
+}
+function sentimentFor(brand, engine, region) {
+  const bf = (SENT_F[brand] || 0.7) * (0.6 + 0.4 * ctxFactor(engine, region));
+  return SENT_BASE.map(([theme, net, occ]) => ({ theme, net: Math.round(net * bf), occurrences: Math.round(occ * bf) }))
+    .sort((a, b) => b.occurrences - a.occurrences);
+}
+function citeFactor(brand, engine, region) {
+  const r = brandRow(brand, engine, region);
+  return r ? r.mentions_count / 4120 : 0.5;
+}
+function domainsFor(brand, engine, region) {
+  const cf = citeFactor(brand, engine, region) * 1.0;
+  return DOMAINS.map(([d, c, owners, beat]) => ({
+    root_domain: d, count: Math.round(c * cf), owners, beat,
+    owned: owners.includes(brand),
+  }));
+}
+function categoriesFor(brand, engine, region) {
+  const total = domainsFor(brand, engine, region).reduce((s, d) => s + d.count, 0);
+  return CITE_CATS.map(([cat, share]) => ({ citation_category: cat, citation_share: share, count: Math.round((share / 100) * total) }));
+}
+function promptsFor(brand, engine, region) {
+  if (brand !== OWNED_BRAND) return [];
+  const f = ctxFactor(engine, region);
+  return PROMPTS.map(([prompt, topic, tags, vis, cit, rank, vol]) => ({
+    prompt, topic, tags,
+    visibility_score: +(vis * f).toFixed(1),
+    citation_share: +(cit * f).toFixed(1),
+    citation_rank: rank,
+    prompt_volume: Math.round(vol * f),
+  }));
+}
+
+const clone = (x) => JSON.parse(JSON.stringify(x));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const ctxLabel = (c) => `${c.engine} · ${c.region}`;
+
+/* =============================================================================
+   API
+   ========================================================================== */
+const api = {
+  async getOverview({ brand, engine, region }) {
+    await wait(180);
+    const lb = leaderboard(engine, region);
+    const me = lb.find((r) => r.asset_name === brand) || lb[0];
+    const sent = sentimentFor(brand, engine, region);
+    const cats = categoriesFor(brand, engine, region);
+    const doms = domainsFor(brand, engine, region);
+    const prompts = promptsFor(brand, engine, region);
+
+    return {
+      kpis: [
+        { title: "Visibility Rank", value: "#" + me.visibility_rank, label: `within ${engine} / ${region}` },
+        { title: "Visibility %", value: me.visibility_score + "%", label: "of tracked answers mention " + brand },
+        { title: "Share of Voice %", value: me.share_of_voice + "%", label: "of all brand mentions" },
+        { title: "Avg Position", value: me.average_position.toFixed(1), label: "average rank when mentioned", caption: "lower is better" },
+      ],
+      leaderboard: {
+        type: "leaderboard", title: "Visibility Leaderboard — " + ctxLabel({ engine, region }),
+        columns: ["Brand", "Visibility %", "Share of Voice %", "Avg Position", "Mentions"],
+        brandKey: "asset_name",
+        rows: lb.map((r) => [r.asset_name, r.visibility_score, r.share_of_voice, r.average_position, r.mentions_count]),
+        highlight: brand,
+        insight: `${lb[0].asset_name} leads visibility here; ${brand} sits at rank #${me.visibility_rank}.`,
+        caveats: "visibility_rank within engine+region; avg position is better when lower (1 = first).",
+      },
+      sentiment: {
+        type: "bar", title: "Net Sentiment by Theme — " + brand, subtitle: "top 10 themes by occurrences",
+        columns: ["Theme", "Net"],
+        rows: sent.map((s) => [s.theme, s.net]),
+        meta: sent.map((s) => s.occurrences),
+        metaLabel: "occ",
+        insight: "Net = positive − negative. " + brand + " skews " + (sent.reduce((a, s) => a + s.net, 0) >= 0 ? "favourable overall." : "unfavourable overall."),
+        caveats: "Themes grouped case-insensitively; only positive/negative exist (no neutral).",
+      },
+      catTile: {
+        type: "bar", title: "Citations by Source Category", subtitle: ctxLabel({ engine, region }),
+        columns: ["Category", "Citation Share %"],
+        rows: cats.map((c) => [c.citation_category, c.citation_share]),
+        insight: "Social and earned media dominate; owned domains are a minority of citations.",
+        caveats: "citation_share shown ×100.",
+      },
+      domTile: {
+        type: "leaderboard", title: "Top Cited Domains", subtitle: ctxLabel({ engine, region }),
+        columns: ["Domain", "Citations", "Citation Share %"],
+        brandKey: null,
+        rows: doms.slice(0, 12).map((d) => [d.root_domain, d.count, +((d.count / doms.reduce((s, x) => s + x.count, 0)) * 100).toFixed(1)]),
+        ownedDomains: doms.filter((d) => d.owned).map((d) => d.root_domain),
+        insight: "Community and video platforms — Reddit and YouTube — are the heaviest citation sources.",
+        caveats: "Raw counts within the selected engine + region.",
+      },
+      prompts: {
+        type: "table", title: "Prompt Performance — where " + brand + " surfaces",
+        columns: ["Prompt", "Topic", "Tags", "Visibility %", "Citation Share %", "Citation Rank", "Volume"],
+        rows: prompts.map((p) => [p.prompt, p.topic, p.tags, p.visibility_score, p.citation_share, p.citation_rank, p.prompt_volume]),
+        empty: prompts.length === 0,
+        insight: prompts.length ? "High-visibility prompts with weak citation rank are your clearest content gaps." : null,
+        caveats: "Prompt-level metrics are available for the owned brand (ChatGPT) in this snapshot; for other brands this section may be empty.",
+      },
+    };
+  },
+
+  async getPrism({ role, brand, engine, region }) {
+    await wait(220);
+    return { role: ROLES[role], tiles: buildRoleInsights(role, { brand, engine, region }) };
+  },
+
+  async getActions({ role }) {
+    await wait(140);
+    return { actions: clone(ACTIONS[role] || []) };
+  },
+
+  async runAction(actionId, ctx) {
+    await wait(1300);
+    const base = RUN_RESULTS[actionId] || { summary: "Action completed.", preview: "—" };
+    const id = "run_" + Math.random().toString(16).slice(2, 6);
+    return { runId: id, status: "done", summary: base.summary, preview: base.preview, seeded: ctx };
+  },
+};
+
+/* ---- LIVE DATA -------------------------------------------------------------
+   Override the mock api above with fetch calls to the Flask backend, which
+   serves real data from profound.db (dashboard_server.py / dashboard_data.py).
+   The mock implementation is kept above as an offline reference but is no
+   longer called. Same shapes in, same shapes out — the components are unchanged.
+   --------------------------------------------------------------------------- */
+const qs = (c) => `?brand=${encodeURIComponent(c.brand)}&engine=${encodeURIComponent(c.engine)}&region=${encodeURIComponent(c.region)}`;
+async function jget(path) { const r = await fetch(path); if (!r.ok) throw new Error(path + " → " + r.status); return r.json(); }
+async function jpost(path, body) { const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); if (!r.ok) throw new Error(path + " → " + r.status); return r.json(); }
+Object.assign(api, {
+  getMeta: () => jget("/api/meta"),
+  getOverview: (ctx) => jget("/api/overview" + qs(ctx)),
+  getPrism: ({ role, ...ctx }) => jget("/api/prism/" + role + qs(ctx)),
+  getActions: ({ role }) => jget("/api/prism/" + role + "/actions"),
+  runAction: (actionId, ctx) => jpost("/api/actions/" + actionId + "/run", ctx),
+});
+
+/* =============================================================================
+   Roles, role-insight builders, actions
+   ========================================================================== */
+const ROLES = {
+  cmo:   { id: "cmo", name: "Commercial Director", short: "CMO", goal: "A weekly executive read on AI-search performance — only the 3–5 items worth a decision, not a data dump.", questions: ["What's the one number I should care about?", "Are competitors gaining share of voice?", "Is sentiment positive or negative overall?", "Any new ways customers describe the category?"] },
+  seo:   { id: "seo", name: "Optimization Lead", short: "SEO", goal: "A board of citation opportunities, prioritised by potential traffic impact.", questions: ["Which root domains are cited that aren't ours?", "Which engines are we under-cited on?", "Which topics drive the most citations?"] },
+  pm:    { id: "pm", name: "Product Manager", short: "PM", goal: "How AI describes the product, which use-case prompts surface it, and which adjacent questions go unanswered.", questions: ["Top use-cases where we show up?", "Which features does AI highlight?", "What adjacent questions don't we answer?", "Which competitors get recommended?"] },
+  brand: { id: "brand", name: "Brand Lead", short: "Brand", goal: "A sentiment-first view of how AI characterises the brand versus competitors, theme by theme.", questions: ["How does our sentiment compare theme-by-theme?", "What attributes does AI associate with us?", "What positive themes do competitors win?"] },
+  pr:    { id: "pr", name: "Earned Media Lead", short: "PR", goal: "A working list of third-party domains and authors covering the category that don't cite the brand, mapped to topic beats.", questions: ["Which third-party domains are cited most?", "Which aren't citing us?", "What source types dominate?", "Which domains own which topics?"] },
+};
+const ROLE_ORDER = ["cmo", "seo", "pm", "brand", "pr"];
+
+function topComates(brand, engine, region, n) {
+  return leaderboard(engine, region).filter((r) => r.asset_name !== brand).slice(0, n);
+}
+
+function buildRoleInsights(role, ctx) {
+  const { brand, engine, region } = ctx;
+  const lb = leaderboard(engine, region);
+  const me = lb.find((r) => r.asset_name === brand) || lb[0];
+  const sent = sentimentFor(brand, engine, region);
+  const doms = domainsFor(brand, engine, region);
+  const prompts = promptsFor(brand, engine, region);
+  const totalCites = doms.reduce((s, d) => s + d.count, 0);
+
+  if (role === "cmo") {
+    const net = sent.reduce((a, s) => a + s.net, 0);
+    return [
+      { type: "kpi-strip", tiles: [
+        { title: "The one number", value: "#" + me.visibility_rank, label: `visibility rank in ${engine} / ${region}`, caption: brand + " vs " + (lb.length - 1) + " competitors" },
+        { title: "Visibility %", value: me.visibility_score + "%", label: "of answers mention " + brand },
+        { title: "Share of Voice %", value: me.share_of_voice + "%", label: "of all brand mentions" },
+        { title: "Sentiment", value: net >= 0 ? "Positive" : "Negative", label: "net across themes", caption: "net sum " + (net >= 0 ? "+" : "") + net },
+      ]},
+      { type: "leaderboard", title: "Visibility vs top competitors", columns: ["Brand", "Visibility %", "Share of Voice %"],
+        rows: lb.slice(0, 5).map((r) => [r.asset_name, r.visibility_score, r.share_of_voice]), highlight: brand,
+        insight: net >= 0 ? "Overall sentiment is favourable; visibility is the lever to push." : "Visibility holding, but overall sentiment is a watch-item.",
+        caveats: "Top 5 of " + lb.length + " brands in this engine + region." },
+      { type: "table", title: "Newest / emerging-theme prompts", columns: ["Prompt", "Topic", "Visibility %"],
+        rows: (prompts.length ? prompts : promptsFor(OWNED_BRAND, engine, region)).slice(0, 4).map((p) => [p.prompt, p.topic, p.visibility_score]),
+        insight: "New category language is forming around agents, privacy and context windows.",
+        caveats: "Emerging = prompts new to this snapshot's tracked set." },
+    ];
+  }
+  if (role === "seo") {
+    const thirdParty = doms.filter((d) => !d.owned).slice(0, 8);
+    const gap = (prompts.length ? prompts : promptsFor(OWNED_BRAND, engine, region)).slice().sort((a, b) => b.citation_rank - a.citation_rank).slice(0, 6);
+    const byTopic = {};
+    promptsFor(OWNED_BRAND, engine, region).forEach((p) => { byTopic[p.topic] = (byTopic[p.topic] || 0) + p.citation_share; });
+    const topics = Object.keys(byTopic).map((t) => [t, +byTopic[t].toFixed(1)]).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const engines = ENGINE_OPTIONS.map((e) => [e, +(13.5 * ENGINE_F[e]).toFixed(1)]).sort((a, b) => b[1] - a[1]);
+    return [
+      { type: "leaderboard", title: "Third-party domains cited for the category", columns: ["Domain", "Citations", "Topic beat"],
+        rows: thirdParty.map((d) => [d.root_domain, d.count, d.beat]),
+        insight: "These domains rank for our category but aren't ours — citation-recovery targets.",
+        caveats: "Excludes owned domains for " + brand + "." },
+      { type: "table", title: "Owned-page citation gaps (keyword view)", columns: ["Prompt", "Topic", "Citation Rank", "Citation Share %"],
+        rows: gap.map((p) => [p.prompt, p.topic, p.citation_rank, p.citation_share]), empty: gap.length === 0,
+        insight: "High visibility but weak citation rank = pages to build or refresh first.",
+        caveats: "Higher citation_rank is worse. Owned-brand prompts only." },
+      { type: "table", title: "Engine citation coverage", columns: ["Engine", "Owned Citation Share %"],
+        rows: engines, highlight: engine, highlightCol: 0,
+        insight: "You're least cited on " + engines[engines.length - 1][0] + " — an under-served engine.",
+        caveats: "Owned citation share by engine, current region." },
+      { type: "bar", title: "Topic citation leaders", columns: ["Topic", "Citation Share %"],
+        rows: topics, insight: "Safety and reasoning topics convert the most citations.", caveats: "Aggregated across owned-brand prompts." },
+    ];
+  }
+  if (role === "pm") {
+    return [
+      { type: "table", title: "Use-case clusters where " + brand + " surfaces", columns: ["Cluster", "Member Prompts", "Avg Visibility %"],
+        rows: CLUSTERS.map((c) => [c[0], c[1], c[2]]),
+        insight: "Coding and agent clusters are where the product shows up most often.",
+        caveats: "Prompts clustered by use-case theme." },
+      { type: "chips", title: "Adjacent questions to answer", items: ADJACENT,
+        insight: "AI is asked these next — gaps the product/docs could own.",
+        caveats: "Adjacent = high-volume sub-questions with low owned coverage." },
+      { type: "leaderboard", title: "Competitors most recommended", columns: ["Brand", "Visibility %", "Share of Voice %"],
+        rows: topComates(brand, engine, region, 4).map((r) => [r.asset_name, r.visibility_score, r.share_of_voice]),
+        insight: "These competitors get recommended alongside or instead of " + brand + ".",
+        caveats: "Top competitors by visibility in this engine + region." },
+    ];
+  }
+  if (role === "brand") {
+    const comps = topComates(brand, engine, region, 2).map((r) => r.asset_name);
+    const series = [brand, ...comps];
+    const compSent = comps.map((c) => sentimentFor(c, engine, region));
+    const rows = sent.map((s, i) => [s.theme, s.net, ...compSent.map((cs) => (cs[i] ? cs[i].net : 0))]);
+    const risks = sent.filter((s) => s.net < 0).map((s) => s.theme);
+    return [
+      { type: "bar", title: "Net sentiment — " + brand + " vs competitors", columns: ["Theme", ...series],
+        rows, insight: brand + " is characterised most favourably on its top themes; gaps show where rivals win.",
+        caveats: "Net = positive − negative, by theme. Negative = unfavorable." },
+      { type: "chips", title: "Attributes AI associates with " + brand, items: ATTRIBUTES, tone: "pos",
+        insight: "Recurring descriptors lifted from positive-sentiment mentions.",
+        caveats: "Derived from theme + adjective co-occurrence." },
+      { type: "chips", title: "Reputation-risk themes", items: risks.length ? risks : ["None this snapshot"], tone: "risk",
+        insight: risks.length ? "Negative-net themes to prepare responses for." : "No net-negative themes this snapshot.",
+        caveats: "Themes with net sentiment below zero." },
+    ];
+  }
+  if (role === "pr") {
+    const thirdParty = doms.filter((d) => !d.owned);
+    const notCiting = thirdParty.filter((d) => d.beat).slice(0, 6);
+    const srcMix = categoriesFor(brand, engine, region);
+    return [
+      { type: "leaderboard", title: "Third-party domains by citations", columns: ["Domain", "Citations"],
+        rows: thirdParty.slice(0, 10).map((d) => [d.root_domain, d.count]),
+        insight: "The domains shaping category answers — your outreach universe.",
+        caveats: "Excludes owned domains." },
+      { type: "table", title: "Domain × topic beat map", columns: ["Domain", "Topic beat", "Citations"],
+        rows: thirdParty.slice(0, 8).map((d) => [d.root_domain, d.beat, d.count]),
+        insight: "Map each domain to the beat it owns before pitching.",
+        caveats: "Beat = dominant topic the domain is cited for." },
+      { type: "bar", title: "Source-type mix", columns: ["Category", "Citation Share %"],
+        rows: srcMix.map((c) => [c.citation_category, c.citation_share]),
+        insight: "Social and earned media dominate the citation mix.",
+        caveats: "citation_share ×100." },
+      { type: "table", title: "Domains not citing us", columns: ["Domain", "Topic beat", "Citations"],
+        rows: notCiting.map((d) => [d.root_domain, d.beat, d.count]),
+        insight: "Cited for the category but not for " + brand + " — prime outreach list.",
+        caveats: "Citation-curated across all prompts." },
+    ];
+  }
+  return [];
+}
+
+const ACTIONS = {
+  cmo: [
+    { id: "cmo_brief", title: "Generate weekly exec brief", desc: "Summarise visibility, share of voice and sentiment into a one-page brief for leadership.", inputs: [["Top 5", "competitors"], ["10", "sentiment themes"], ["1", "brand context"]] },
+    { id: "cmo_compwatch", title: "Draft competitor-watch summary", desc: "Flag where competitors are gaining share of voice and the themes driving it.", inputs: [["9", "competitors"], ["SoV", "by brand"]] },
+  ],
+  seo: [
+    { id: "seo_brief", title: "Build content brief for citation-gap prompts", desc: "Draft content briefs targeting prompts where you rank but aren't cited.", inputs: [["5", "citation-gap prompts"], ["6", "topic clusters"]] },
+    { id: "seo_refresh", title: "Draft page-refresh checklist", desc: "A checklist to refresh owned pages for under-cited topics and engines.", inputs: [["1", "owned domain"], ["8", "weak topics"]] },
+  ],
+  pm: [
+    { id: "pm_adjacent", title: "Cluster & summarise adjacent questions", desc: "Group unanswered adjacent questions into a prioritised roadmap input.", inputs: [["4", "adjacent questions"], ["5", "use-case clusters"]] },
+    { id: "pm_teardown", title: "Competitor use-case teardown", desc: "Compare how competitors are recommended across each use-case cluster.", inputs: [["3", "competitors"], ["use-case", "prompts"]] },
+  ],
+  brand: [
+    { id: "brand_risk", title: "Draft sentiment-risk response notes", desc: "Prepare talking points for the net-negative sentiment themes.", inputs: [["3", "risk themes"], ["competitor", "sentiment"]] },
+    { id: "brand_claim", title: "Claim-these-themes content plan", desc: "Plan content to own the positive themes competitors currently win.", inputs: [["positive", "themes"], ["competitor", "gaps"]] },
+  ],
+  pr: [
+    { id: "pr_pitch", title: "Draft outreach pitches for target domains", desc: "Personalised pitches for third-party domains that don't cite you yet.", inputs: [["12", "target domains"], ["topic", "beats"]] },
+    { id: "pr_beats", title: "Build journalist / domain beat list", desc: "Map domains to the topics they cover for targeted, relevant outreach.", inputs: [["15", "domains"], ["topic", "beats"]] },
+  ],
+};
+
+const RUN_RESULTS = {
+  cmo_brief: { summary: "Drafted a 1-page exec brief: rank, SoV and sentiment headline with 3 recommended decisions.", preview: "1. Headline — #2 visibility, sentiment net +172\n2. Watch — Gemini gaining SoV in coding\n3. Decide — fund citation recovery on Reddit/YouTube" },
+  cmo_compwatch: { summary: "Drafted a competitor-watch summary across 9 brands with the themes moving share of voice.", preview: "• Claude — leads argumentation & coding\n• Gemini — rising on multimodal\n• Perplexity — strong on research citations" },
+  seo_brief: { summary: "Drafted 5 content briefs for citation-gap prompts, each with target domains and an outline.", preview: "1. \"safest AI model\" — cite arxiv, anthropic\n2. \"fastest AI model\" — benchmark table page\n3. \"best AI for coding\" — comparison hub" },
+  seo_refresh: { summary: "Built a page-refresh checklist for 8 under-cited topics across owned pages.", preview: "☐ Add FAQ schema to /pricing\n☐ Refresh /enterprise with case studies\n☐ Add benchmarks to /coding" },
+  pm_adjacent: { summary: "Clustered 4 adjacent questions into a roadmap input with suggested owners.", preview: "• Tooling — MCP support, rate limits\n• Docs — long-document handling\n• Infra — offline / on-prem" },
+  pm_teardown: { summary: "Drafted a competitor use-case teardown across the top 3 recommended rivals.", preview: "Claude — coding, reasoning\nGemini — multimodal, search\nPerplexity — research, citations" },
+  brand_risk: { summary: "Drafted response notes for 3 net-negative sentiment themes.", preview: "• Cost — frame value vs. token efficiency\n• Verbosity — concise-mode messaging\n• Hallucination — grounding & citations story" },
+  brand_claim: { summary: "Drafted a content plan to claim 5 positive themes competitors currently win.", preview: "1. Reasoning depth — technical deep-dives\n2. Safety — trust center updates\n3. Writing quality — showcase gallery" },
+  pr_pitch: { summary: "Drafted 5 outreach pitches for target domains, ready for review.", preview: "1. reddit.com — r/LocalLLaMA mods …\n2. medium.com — AI tutorials authors …\n3. techcrunch.com — enterprise AI desk …" },
+  pr_beats: { summary: "Built a journalist / domain beat list mapping 15 domains to topic beats.", preview: "• techcrunch.com → News\n• theverge.com → News\n• substack.com → Opinion\n• medium.com → Tutorials" },
+};
+
+/* =============================================================================
+   Rendering primitives
+   ========================================================================== */
+const { useState, useEffect, useCallback } = React;
+
+const Isotype = () => (
+  <svg viewBox="0 0 66 68" fill="currentColor" aria-hidden="true"><path d="M0.0673828 45.1145V26.5568C0.0673828 23.8272 1.38269 21.2643 3.60129 19.6709L27.6112 2.42687C29.1549 1.31814 31.0081 0.72168 32.9094 0.72168H32.9851C34.9592 0.72168 36.8685 1.33602 38.4593 2.47874C43.7448 6.2754 56.2521 15.2574 62.3985 19.6713C64.6172 21.2646 65.9323 23.8272 65.9323 26.5568V41.4429C65.9323 44.1725 64.6165 46.7349 62.3971 48.3273L38.41 65.5383C36.8333 66.6695 34.941 67.2781 32.9998 67.2781C31.0515 67.2781 29.1528 66.6685 27.5695 65.5345C24.4301 63.286 19.382 59.6608 19.382 59.6608V36.7552C19.382 36.454 19.7233 36.2792 19.9682 36.455L32.7838 45.6581C32.9128 45.7508 33.0868 45.7508 33.2159 45.6581L49.0324 34.3001C49.2378 34.1525 49.2378 33.8472 49.0324 33.6997L33.2159 22.3417C33.0868 22.2489 32.9128 22.2489 32.7838 22.3417L0.653597 45.4147C0.408749 45.5906 0.0673828 45.4158 0.0673828 45.1145Z" /></svg>
+);
+const PrismMark = () => (
+  <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <path d="M32 10.5 L51.5 49.5 L12.5 49.5 Z" fill="currentColor" fillOpacity="0.06" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+    <path d="M3 19.5 L23 28" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    <path d="M23 28 L44.5 38.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.5" />
+    <g strokeWidth="2.3" strokeLinecap="round">
+      <path d="M44.5 38.5 L62 31.5" stroke="#FF5252" />
+      <path d="M44.5 38.5 L62 35.6" stroke="#FF9F40" />
+      <path d="M44.5 38.5 L62 39.7" stroke="#FFD23D" />
+      <path d="M44.5 38.5 L62 43.8" stroke="#46CB71" />
+      <path d="M44.5 38.5 L62 47.9" stroke="#33C2E6" />
+      <path d="M44.5 38.5 L62 52.0" stroke="#3E7BFF" />
+      <path d="M44.5 38.5 L62 56.1" stroke="#9C6BFF" />
+    </g>
+  </svg>
+);
+/* Brand monograms — colored initial per brand, with a hashed fallback so any
+   brand from the live data still gets a chip. Not trademarked logos. */
+const BRAND_META = {
+  ChatGPT: { c: "#10A37F", i: "C" }, Claude: { c: "#D97757", i: "C" },
+  Gemini: { c: "#4285F4", i: "G" }, OpenAI: { c: "#0E0E10", i: "O" },
+  Perplexity: { c: "#20B8CD", i: "P" }, Copilot: { c: "#2E74D6", i: "M" },
+  Microsoft: { c: "#2E74D6", i: "M" }, Google: { c: "#4285F4", i: "G" },
+  Anthropic: { c: "#D97757", i: "A" }, GitHub: { c: "#0E0E10", i: "G" },
+  DeepSeek: { c: "#4D6BFE", i: "D" }, DeepL: { c: "#0F2B46", i: "D" },
+  Cursor: { c: "#111111", i: "C" }, Groq: { c: "#F55036", i: "G" },
+  Zendesk: { c: "#03363D", i: "Z" }, Llama: { c: "#635BFF", i: "L" },
+  Mistral: { c: "#FA5111", i: "M" }, Grok: { c: "#111111", i: "G" },
+};
+const MONO_FALLBACK = ["#6B6E76", "#2E9E63", "#B8860B", "#376CFF", "#9C6BFF", "#D24B4B", "#20B8CD"];
+function monoFor(name) {
+  if (BRAND_META[name]) return BRAND_META[name];
+  let h = 0; for (let k = 0; k < name.length; k++) h = (h * 31 + name.charCodeAt(k)) >>> 0;
+  return { c: MONO_FALLBACK[h % MONO_FALLBACK.length], i: (name[0] || "?").toUpperCase() };
+}
+/* Engine monograms — colored initial per answer engine, same chip language as
+   brands, with a hashed fallback for any engine from the live data. */
+const ENGINE_META = {
+  "All engines": { c: "#376CFF", i: "A" },
+  "ChatGPT": { c: "#10A37F", i: "C" },
+  "Google Gemini": { c: "#4285F4", i: "G" },
+  "Google AI Mode": { c: "#34A853", i: "AM" },
+  "Google AI Overviews": { c: "#EA4335", i: "AO" },
+  "Microsoft Copilot": { c: "#2E74D6", i: "Co" },
+  "Perplexity": { c: "#20B8CD", i: "P" },
+};
+function engineMono(name) {
+  if (ENGINE_META[name]) return ENGINE_META[name];
+  let h = 0; for (let k = 0; k < name.length; k++) h = (h * 31 + name.charCodeAt(k)) >>> 0;
+  return { c: MONO_FALLBACK[h % MONO_FALLBACK.length], i: (name[0] || "?").toUpperCase() };
+}
+const Chev = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>;
+const SpinIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 3a9 9 0 1 0 9 9" /></svg>;
+const RefreshIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" /></svg>;
+const ArrowIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+
+function fmtNum(v, header) {
+  if (typeof v !== "number") return v;
+  const pct = typeof header === "string" && header.trim().endsWith("%");
+  const s = Number.isInteger(v) ? v.toLocaleString("en-US") : v.toFixed(1);
+  return pct ? s + "%" : s;
+}
+
+function Insight({ tile }) {
+  return (
+    <React.Fragment>
+      {tile.insight ? <div className="tile__insight"><span className="d" /><span>{tile.insight}</span></div> : null}
+      {tile.caveats ? <div className="tile__caveat">{tile.caveats}</div> : null}
+    </React.Fragment>
+  );
+}
+function TileHead({ tile }) {
+  return <div className="tile__title"><span>{tile.title}</span>{tile.subtitle ? <span className="sub">{tile.subtitle}</span> : null}</div>;
+}
+
+function KpiCard({ k }) {
+  return (
+    <div className="tile">
+      <div className="tile__title">{k.title}</div>
+      <div className="tile__body" style={{ marginBottom: 0 }}>
+        <div className="kpi__val">{k.value}</div>
+        <div className="kpi__label">{k.label}</div>
+        {k.caption ? <div className="kpi__cap">{k.caption}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardTile({ tile }) {
+  const cols = tile.columns;
+  const hi = (tile.highlight || "").toLowerCase();
+  const owned = (tile.ownedDomains || []).map((d) => d.toLowerCase());
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">
+        <table className="dt">
+          <thead><tr><th className="n">#</th>{cols.map((c, i) => <th key={c} className={i === 0 ? "" : "n"}>{c}</th>)}</tr></thead>
+          <tbody>
+            {tile.rows.map((row, ri) => {
+              const key = String(row[0]).toLowerCase();
+              const isHi = hi && key === hi;
+              const isOwnedBrand = key === OWNED_BRAND.toLowerCase() && cols[0] === "Brand";
+              const isOwnedDom = owned.includes(key);
+              return (
+                <tr key={ri} className={isHi || isOwnedDom ? "hl" : ""}>
+                  <td className="rank">{ri + 1}</td>
+                  {row.map((cell, ci) => (
+                    <td key={ci} className={ci === 0 ? "lbl" : "n"}>
+                      {ci === 0 ? (
+                        <span>{cell}
+                          {isOwnedBrand ? <span className="tag tag--owned">Owned</span> : isHi ? <span className="tag tag--sel">Selected</span> : null}
+                          {isOwnedDom ? <span className="tag tag--owned">Owned</span> : null}
+                        </span>
+                      ) : fmtNum(cell, cols[ci])}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
+function TableTile({ tile }) {
+  const cols = tile.columns;
+  if (tile.empty) {
+    return (
+      <div className="tile">
+        <TileHead tile={tile} />
+        <div className="tile__body"><div className="empty">No prompt-level data for this brand in the current snapshot.</div></div>
+        {tile.caveats ? <div className="tile__caveat" style={{ paddingLeft: 0 }}>{tile.caveats}</div> : null}
+      </div>
+    );
+  }
+  const numeric = cols.map((c, i) => i > 0 && tile.rows.every((r) => typeof r[i] === "number"));
+  const hi = (tile.highlight || "").toLowerCase();
+  const hiCol = tile.highlightCol != null ? tile.highlightCol : -1;
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">
+        <table className="dt">
+          <thead><tr>{cols.map((c, i) => <th key={c} className={numeric[i] ? "n" : ""}>{c}</th>)}</tr></thead>
+          <tbody>
+            {tile.rows.map((row, ri) => {
+              const isHi = hi && hiCol >= 0 && String(row[hiCol]).toLowerCase() === hi;
+              return (
+                <tr key={ri} className={isHi ? "hl" : ""}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} className={numeric[ci] ? "n" : ci === 0 ? "lbl" : "muted"}>{numeric[ci] ? fmtNum(cell, cols[ci]) : cell}</td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
+function StandardBars({ tile }) {
+  const valHeader = tile.columns[tile.columns.length - 1];
+  const vals = tile.rows.map((r) => r[r.length - 1]);
+  const max = Math.max(...vals.map(Math.abs), 0.0001);
+  return (
+    <div className="bars">
+      {tile.rows.map((row, i) => {
+        const v = row[row.length - 1];
+        const meta = tile.meta ? tile.meta[i] : null;
+        return (
+          <div className="bar-row" key={i}>
+            <div className="bar-row__lbl" title={row[0]}>{row[0]}</div>
+            <div className="bar-row__track">
+              <div className="bar-row__fill" style={{ width: (Math.abs(v) / max) * 100 + "%" }} />
+              <div className="bar-row__val">{fmtNum(v, valHeader)}{meta != null ? <span style={{ color: "var(--text-tertiary)" }}>  ·  {meta} {tile.metaLabel}</span> : null}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DivergingBars({ tile }) {
+  const series = tile.columns.slice(1);
+  const colors = ["var(--prism-bar-ink)", "var(--accent)", "#B6B8BE"];
+  const all = tile.rows.flatMap((r) => r.slice(1));
+  const max = Math.max(...all.map(Math.abs), 1);
+  return (
+    <div>
+      <div className="dleg">{series.map((s, i) => <span key={s}><i style={{ background: colors[i % colors.length] }} />{s}</span>)}</div>
+      {tile.rows.map((row, ri) => (
+        <div className="drow" key={ri}>
+          <div className="drow__lbl">{row[0]}</div>
+          <div className="dchart">
+            {row.slice(1).map((v, si) => {
+              const len = (Math.abs(v) / max) * 50;
+              const pos = v >= 0;
+              const barStyle = pos ? { left: "50%", width: len + "%", background: colors[si % colors.length] } : { right: "50%", width: len + "%", background: colors[si % colors.length] };
+              const valStyle = pos ? { left: `calc(50% + ${len}% + 6px)` } : { right: `calc(50% + ${len}% + 6px)` };
+              return <div className="dbar-wrap" key={si}><div className="dbar" style={barStyle} /><div className="dval" style={valStyle}>{v > 0 ? "+" + v : v}</div></div>;
+            })}
+          </div>
+        </div>
+      ))}
+      <div className="daxis"><span>−{max}</span><span>0</span><span>+{max}</span></div>
+    </div>
+  );
+}
+
+function BarTile({ tile }) {
+  const hasNeg = tile.rows.some((r) => r.slice(1).some((v) => typeof v === "number" && v < 0));
+  const multi = tile.columns.length > 2;
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">{hasNeg || multi ? <DivergingBars tile={tile} /> : <StandardBars tile={tile} />}</div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
+function ChipsTile({ tile }) {
+  const cls = tile.tone === "risk" ? "chip chip--risk" : tile.tone === "pos" ? "chip chip--pos" : "chip";
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body"><div className="chips">{tile.items.map((it, i) => <span key={i} className={cls}>{it}</span>)}</div></div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
+function KpiStrip({ tile }) {
+  return <div className="tiles tiles--kpi">{tile.tiles.map((k, i) => <KpiCard key={i} k={k} />)}</div>;
+}
+
+function withBold(text) {
+  // Render **significant bits** as <strong>; everything else stays plain text.
+  return String(text).split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
+    p.startsWith("**") && p.endsWith("**")
+      ? <strong key={i}>{p.slice(2, -2)}</strong>
+      : <React.Fragment key={i}>{p}</React.Fragment>);
+}
+
+function BriefTile({ tile, onAction }) {
+  const summary = tile.summary || [];
+  const actions = tile.actions || [];
+  const empty = summary.length === 0 && actions.length === 0;
+  return (
+    <div className="tile" style={{ borderLeft: "3px solid var(--accent)" }}>
+      <div className="tile__title">
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          {tile.title}
+          {tile.badge ? <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--text-tertiary)", background: "var(--surface-2)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>{tile.badge}</span> : null}
+        </span>
+        {tile.subtitle ? <span className="sub">{tile.subtitle}</span> : null}
+      </div>
+      <div className="tile__body">
+        {empty ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 0", color: "var(--text-tertiary)", fontSize: 13 }}>
+            <span className="skl" style={{ width: 7, height: 7, borderRadius: "50%", flex: "none" }} />
+            Awaiting AI summary. Generated by the agent run, it appears here once it lands.
+          </div>
+        ) : (
+          <React.Fragment>
+            {summary.map((p, i) => (
+              <p key={i} style={{ fontSize: 13.5, lineHeight: 1.55, margin: i ? "10px 0 0" : 0, color: "var(--text-secondary)" }}>{withBold(p)}</p>
+            ))}
+            {actions.length ? (
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 7 }}>
+                {actions.map((a, i) => {
+                  const clickable = a.agent && onAction;
+                  const plain = String(a.text).replace(/\*\*/g, "");
+                  return (
+                    <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span className="chip" style={{ flex: "none", fontSize: 10.5, fontWeight: 700 }}>{a.team}</span>
+                      <span title={plain} style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{withBold(a.text)}</span>
+                      {clickable ? (
+                        <button onClick={() => onAction(a.agent)} title={"Run the " + a.agent + " agent"}
+                          style={{ flex: "none", cursor: "pointer", fontSize: 10.5, fontWeight: 700, color: "var(--accent)",
+                                   background: "transparent", border: "1px solid var(--accent)", borderRadius: "var(--radius-pill)",
+                                   padding: "1px 8px", lineHeight: 1.5 }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--accent)"; }}>
+                          Run
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CompFilterTile({ tile }) {
+  const [topic, setTopic] = useState(null); // null = All topics
+  const view = topic ? (tile.byTopic[topic] || { columns: [], rows: [] }) : tile.overall;
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">
+        <div className="tctl">
+          <button className={"tpill" + (topic === null ? " tpill--on" : "")} onClick={() => setTopic(null)}>All topics</button>
+          {tile.topics.map((t) => (
+            <button key={t} className={"tpill" + (topic === t ? " tpill--on" : "")} onClick={() => setTopic(t)}>{t}</button>
+          ))}
+        </div>
+        {view.rows && view.rows.length ? (
+          <table className="dt">
+            <thead><tr>{view.columns.map((c, i) => <th key={i} className={i === 0 ? "" : "n"}>{c}</th>)}</tr></thead>
+            <tbody>{view.rows.map((row, ri) => (
+              <tr key={ri}>{row.map((v, ci) => <td key={ci} className={ci === 0 ? "lbl" : "n"}>{fmtNum(v, view.columns[ci])}</td>)}</tr>
+            ))}</tbody>
+          </table>
+        ) : <div style={{ fontSize: 13, color: "var(--text-tertiary)", padding: "8px 0" }}>No data for {topic}.</div>}
+      </div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
+function TopicSentimentTile({ tile }) {
+  const [worstFirst, setWorstFirst] = useState(true);
+  const [open, setOpen] = useState(null); // expanded topic
+  const rows = [...tile.rows].sort((a, b) => worstFirst ? a[1] - b[1] : b[1] - a[1]);
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">
+        <div className="tctl">
+          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Click a topic to see its prompts</span>
+          <button className="sortbtn" onClick={() => setWorstFirst((v) => !v)}>
+            Sorted: {worstFirst ? "worst first" : "best first"} ⇅
+          </button>
+        </div>
+        <table className="dt">
+          <thead><tr>{tile.columns.map((c, i) => <th key={i} className={i === 0 ? "" : "n"}>{c}</th>)}</tr></thead>
+          <tbody>{rows.map((row, ri) => {
+            const t = row[0], net = row[1], expanded = open === t;
+            const list = tile.prompts[t] || [];
+            return (
+              <React.Fragment key={ri}>
+                <tr className="clickable" onClick={() => setOpen(expanded ? null : t)}>
+                  <td className="lbl"><span className="caret">{expanded ? "▾" : "▸"}</span> {t}</td>
+                  <td className="n"><span className={net >= 0 ? "netpos" : "netneg"}>{net >= 0 ? "+" + net : net}</span></td>
+                  <td className="n">{row[2]}</td>
+                </tr>
+                {expanded ? (
+                  <tr><td colSpan={tile.columns.length} style={{ padding: "2px 12px 10px" }}>
+                    <ul className="promptlist">
+                      {list.length ? list.map((p, i) => <li key={i}>{p}</li>) : <li>No prompts recorded for {t}.</li>}
+                    </ul>
+                  </td></tr>
+                ) : null}
+              </React.Fragment>
+            );
+          })}</tbody>
+        </table>
+      </div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
+function Tile({ tile, onAction }) {
+  switch (tile.type) {
+    case "brief": return <BriefTile tile={tile} onAction={onAction} />;
+    case "kpi-strip": return <KpiStrip tile={tile} />;
+    case "leaderboard": return <LeaderboardTile tile={tile} />;
+    case "table": return <TableTile tile={tile} />;
+    case "bar": return <BarTile tile={tile} />;
+    case "chips": return <ChipsTile tile={tile} />;
+    case "comp-filter": return <CompFilterTile tile={tile} />;
+    case "topic-sentiment": return <TopicSentimentTile tile={tile} />;
+    default: return null;
+  }
+}
+
+function Skeleton({ rows = 5 }) {
+  return <div className="tile"><div className="skl" style={{ height: 14, width: "50%", marginBottom: 16 }} />{Array.from({ length: rows }).map((_, i) => <div key={i} className="skl" style={{ height: 13, margin: "9px 0", width: 92 - i * 8 + "%" }} />)}</div>;
+}
+
+/* =============================================================================
+   Views
+   ========================================================================== */
+function SectionShell({ title, count, children, onRefresh, refreshing, split }) {
+  return (
+    <section className="section">
+      {title ? (
+        <div className="section__head">
+          <div className="section__title"><h2>{title}</h2>{count != null ? <span className="section__count">{count}</span> : null}</div>
+          {onRefresh ? (
+            <button className="btn btn--ghost btn--sm" onClick={onRefresh} disabled={refreshing}>
+              {refreshing ? <span className="spin"><SpinIcon /></span> : <RefreshIcon />}{refreshing ? "Refreshing" : "Refresh"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      <div className={"tiles " + (split ? "tiles--split" : "tiles--single")} style={refreshing ? { opacity: 0.5, transition: "opacity .2s" } : null}>{children}</div>
+    </section>
+  );
+}
+
+function OverviewView({ ctx }) {
+  const [data, setData] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const load = useCallback((spin) => {
+    if (spin) setRefreshing(true);
+    api.getOverview(ctx).then((d) => { setData(d); setRefreshing(false); });
+  }, [ctx.brand, ctx.engine, ctx.region]);
+  useEffect(() => { load(false); }, [load]);
+
+  if (!data) return <div className="wrap"><SectionShell title="Overview"><Skeleton /></SectionShell></div>;
+  return (
+    <div className="wrap">
+      <section className="section">
+        <div className="section__head"><div className="section__title"><h2>Overview</h2><span className="section__count">{ctx.brand} · {ctxLabel(ctx)}</span></div>
+          <button className="btn btn--ghost btn--sm" onClick={() => load(true)} disabled={refreshing}>{refreshing ? <span className="spin"><SpinIcon /></span> : <RefreshIcon />}{refreshing ? "Refreshing" : "Refresh"}</button>
+        </div>
+        <KpiStrip tile={{ tiles: data.kpis }} />
+      </section>
+      <SectionShell title="Visibility Leaderboard"><LeaderboardTile tile={data.leaderboard} /></SectionShell>
+      <SectionShell title="Sentiment"><BarTile tile={data.sentiment} /></SectionShell>
+      <SectionShell title="Citations" split><BarTile tile={data.catTile} /><LeaderboardTile tile={data.domTile} /></SectionShell>
+      <SectionShell title="Prompt Performance"><TableTile tile={data.prompts} /></SectionShell>
+    </div>
+  );
+}
+
+function statusBadge(status) {
+  const s = String(status || "").toLowerCase();
+  if (s === "succeeded" || s === "done") return <span className="badge badge--ok">{status}</span>;
+  if (s === "error" || s === "failed" || s === "cancelled" || s === "timeout") return <span className="badge badge--err">{status}</span>;
+  return <span className="badge badge--run">{status}</span>;
+}
+
+function AgentRunBlock({ a }) {
+  return (
+    <div className="runblock">
+      <div className="runblock__head">
+        <h3>Profound agent · {a.name}</h3>
+        {statusBadge(a.status)}
+        {a.runId ? <span className="result__id" style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text-tertiary)" }}>{a.runId}</span> : null}
+      </div>
+      <div className="runblock__cfg">
+        <span style={{ fontSize: 11.5, color: "var(--text-tertiary)", alignSelf: "center" }}>Configured with</span>
+        {Object.entries(a.configured || {}).map(([k, v], i) => <span key={i} className="act__chip"><b>{k}:</b> {String(v)}</span>)}
+      </div>
+      <div className="runblock__report">{(a.report && a.report.trim()) ? a.report : "Agent returned no report body."}</div>
+    </div>
+  );
+}
+
+function ActionRunModal({ action, run, ctx, onClose, onRerun }) {
+  const running = run === "running";
+  const r = running ? null : run;
+  React.useEffect(() => {
+    const h = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+  const hasTable = r && r.columns && r.columns.length && r.rows && r.rows.length;
+  return (
+    <div className="modal" onClick={onClose}>
+      <div className="modal__panel" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__head">
+          {action.team ? <span className="chip" style={{ fontSize: 10.5, fontWeight: 700, flex: "none" }}>{action.team}</span> : null}
+          <div style={{ minWidth: 0 }}>
+            <h2>{action.title}</h2>
+            <div className="modal__sub">{ctx ? ctx.brand + " · " + ctxLabel(ctx) : null}</div>
+          </div>
+          <button className="modal__x" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="modal__body">
+          {running ? (
+            <div className="mh"><span className="spin" style={{ transform: "scale(1.4)" }}><SpinIcon /></span><span>Running the agent…</span></div>
+          ) : (
+            <React.Fragment>
+              <div className="result__sum" style={{ fontSize: 15, lineHeight: 1.5 }}>{r.summary}</div>
+              {hasTable ? (
+                <table className="dt" style={{ marginTop: 16 }}>
+                  <thead><tr>{r.columns.map((c, i) => <th key={i} className={i === 0 ? "" : "n"}>{c}</th>)}</tr></thead>
+                  <tbody>{r.rows.map((row, ri) => <tr key={ri}>{row.map((v, ci) => <td key={ci} className={ci === 0 ? "" : "n"}>{v}</td>)}</tr>)}</tbody>
+                </table>
+              ) : (r.preview && r.preview.length) ? (
+                <div className="result__prev" style={{ marginTop: 16 }}>{Array.isArray(r.preview) ? r.preview.join("\n") : r.preview}</div>
+              ) : null}
+              {r.agentRun ? <AgentRunBlock a={r.agentRun} /> : null}
+            </React.Fragment>
+          )}
+        </div>
+        <div className="modal__foot">
+          <span className="result__id">{r ? r.runId : ""}</span>
+          <button className="btn btn--ghost btn--sm" onClick={onClose}>Close</button>
+          <button className="btn btn--accent btn--sm" onClick={onRerun} disabled={running}>Run again <ArrowIcon /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionCard({ action, ctx, highlight }) {
+  const [run, setRun] = useState(null); // null | "running" | result
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef(null);
+  const isHi = highlight && highlight === action.id;
+  const inputChips = action.inputChips || action.inputs || [];
+  const built = action.built !== false;
+  const launch = async () => {
+    if (!built) return;
+    setOpen(true);
+    setRun("running");
+    const r = await api.runAction(action.id, { ...(action.inputs || {}), region: ctx.region });
+    setRun(r);
+  };
+  // Arriving from a summary-action click: scroll into view + run once (pre-load).
+  React.useEffect(() => {
+    if (isHi && ref.current) ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (isHi && built && !run) launch();
+  }, [highlight]);
+  const done = run && run !== "running";
+  return (
+    <div className="act" ref={ref} style={isHi ? { boxShadow: "0 0 0 2px var(--accent)", borderColor: "var(--accent)" } : null}>
+      <div className="act__title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {action.team ? <span className="chip" style={{ fontSize: 10, fontWeight: 700 }}>{action.team}</span> : null}
+        <span>{action.title}</span>
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-tertiary)", fontWeight: 600 }}>
+          <span className="statdot" style={{ background: built ? "var(--green)" : "var(--text-tertiary)" }} />{built ? "Built" : "Not built"}
+        </span>
+      </div>
+      <div className="act__desc">{withBold(action.desc)}</div>
+      <div className="act__inputs">{inputChips.map((inp, i) => <span key={i} className="act__chip"><b>{inp[0]}</b> {inp[1]}</span>)}</div>
+      <div className="act__foot">
+        {run === "running" ? <span className="runstat runstat--running"><span className="spin"><SpinIcon /></span> Running agent…</span>
+          : done ? <span className="runstat runstat--done"><span className="statdot" style={{ background: "var(--green)" }} /> Agent run complete</span>
+          : <span style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>{built ? "Pre-loaded · " + inputChips.length + " input set(s)" : "Awaiting Profound graph"}</span>}
+        {done ? <button className="btn btn--ghost btn--sm" onClick={() => setOpen(true)}>View result</button> : null}
+        <button className="btn btn--accent btn--sm" onClick={launch} disabled={run === "running" || !built}>Run agent <ArrowIcon /></button>
+      </div>
+      {open ? <ActionRunModal action={action} run={run} ctx={ctx} onClose={() => setOpen(false)} onRerun={launch} /> : null}
+    </div>
+  );
+}
+
+function PrismView({ ctx, role, setRole }) {
+  const [tab, setTab] = useState("insights");
+  const [insights, setInsights] = useState(null);
+  const [actions, setActions] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [highlight, setHighlight] = useState(null);
+  const roleMeta = ROLES[role];
+
+  // A summary action was clicked: jump to Actions and pre-load that agent's card.
+  const goAction = useCallback((agent) => { setHighlight(agent); setTab("actions"); }, []);
+
+  const load = useCallback((spin) => {
+    if (spin) setRefreshing(true);
+    api.getPrism({ role, ...ctx }).then((d) => { setInsights(d.tiles); setRefreshing(false); });
+    api.getActions({ role, ...ctx }).then((d) => setActions(d.actions));
+  }, [role, ctx.brand, ctx.engine, ctx.region]);
+  useEffect(() => { load(false); }, [load]);
+
+  return (
+    <div className="wrap">
+      <div className="role">
+        <div className="role__top">
+          <label className="role__pick">
+            <span className="role__role">Role</span>
+            <span className="role__name">{roleMeta.name}</span>
+            <span className="sel__chev"><Chev /></span>
+            <select value={role} onChange={(e) => setRole(e.target.value)}>
+              {ROLE_ORDER.map((r) => <option key={r} value={r}>{ROLES[r].name} ({ROLES[r].short})</option>)}
+            </select>
+          </label>
+          <span className="snap"><span className="snap__dot" />{ctx.brand} · {ctxLabel(ctx)}</span>
+        </div>
+      </div>
+
+      <div className="subtabs">
+        <button className={"subtab" + (tab === "insights" ? " subtab--active" : "")} onClick={() => setTab("insights")}>Insights</button>
+        <button className={"subtab" + (tab === "actions" ? " subtab--active" : "")} onClick={() => setTab("actions")}>Actions</button>
+      </div>
+
+      {tab === "insights" ? (
+        <div>
+          <div className="section__head" style={{ top: "var(--stick)" }}>
+            <div className="section__title"><h2>{roleMeta.short} insights</h2><span className="section__count">{insights ? insights.length + " tiles" : ""}</span></div>
+            <button className="btn btn--ghost btn--sm" onClick={() => load(true)} disabled={refreshing}>{refreshing ? <span className="spin"><SpinIcon /></span> : <RefreshIcon />}{refreshing ? "Refreshing" : "Refresh"}</button>
+          </div>
+          <div className="tiles tiles--single" style={refreshing ? { opacity: 0.5 } : null}>
+            {insights ? insights.map((t, i) => <Tile key={i} tile={t} onAction={goAction} />) : <Skeleton />}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="section__head" style={{ top: "var(--stick)" }}><div className="section__title"><h2>{roleMeta.short} actions</h2><span className="section__count">spin off downstream agents</span></div></div>
+          <div className="acts">{actions ? actions.map((a) => <ActionCard key={a.id} action={a} ctx={ctx} highlight={highlight} />) : <Skeleton rows={3} />}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =============================================================================
+   Selectors + App
+   ========================================================================== */
+function Selector({ k, value, options, onChange, brand }) {
+  return (
+    <label className={"sel" + (brand ? " sel--brand" : "")}>
+      <span className="sel__k">{k}</span>
+      <span className="sel__v">{value}</span>
+      {brand && value === OWNED_BRAND ? <span className="owntag">Owned</span> : null}
+      <span className="sel__chev"><Chev /></span>
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => <option key={o} value={o}>{o}{brand && o === OWNED_BRAND ? " (owned)" : ""}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function App() {
+  const [meta, setMeta] = useState(null);
+  const [view, setView] = useState("overview");
+  const [brand, setBrand] = useState(null);
+  const [engine, setEngine] = useState(null);
+  const [region, setRegion] = useState(null);
+  const [role, setRole] = useState("cmo");
+
+  useEffect(() => {
+    api.getMeta().then((m) => {
+      setMeta(m);
+      setBrand(m.defaults.brand);
+      setEngine(m.defaults.engine);
+      setRegion(m.defaults.region);
+    });
+  }, []);
+
+  if (!meta || !brand) {
+    return (
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand__mark"><PrismMark /></span>
+          <span><span className="brand__name">Prism</span><span className="brand__set" style={{ display: "block" }}>AI Visibility · Frontier Models</span></span>
+        </div>
+        <div className="topbar__spacer" />
+        <span className="snap"><span className="snap__dot" />loading snapshot…</span>
+      </header>
+    );
+  }
+
+  const ctx = { brand, engine, region };
+  return (
+    <React.Fragment>
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand__mark"><PrismMark /></span>
+          <span><span className="brand__name">Prism</span><span className="brand__set" style={{ display: "block" }}>AI Visibility · Frontier Models</span></span>
+        </div>
+        <div className="navset">
+          <button className={"navtab" + (view === "overview" ? " navtab--active" : "")} onClick={() => setView("overview")}>Overview</button>
+          <button className={"navtab" + (view === "prism" ? " navtab--active" : "")} onClick={() => setView("prism")}>Prism</button>
+        </div>
+        <div className="topbar__spacer" />
+        <div className="selrow">
+          <Selector k="Brand" value={brand} options={meta.brands} onChange={setBrand} brand />
+          <Selector k="Region" value={region} options={meta.regions} onChange={setRegion} />
+          <span className="snap"><span className="snap__dot" />snapshot <span className="num">{meta.snapshot.from}</span> → <span className="num">{meta.snapshot.to}</span></span>
+        </div>
+      </header>
+
+      <div className="brandbar">
+        <span className="brandbar__k">Engine</span>
+        <div className="bstrip">
+          {meta.engines.map((e) => {
+            const m = engineMono(e);
+            return (
+              <button key={e} className={"bchip" + (engine === e ? " bchip--active" : "")} onClick={() => setEngine(e)}>
+                <span className="bmono" style={{ background: m.c }}>{m.i}</span>
+                {e}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {view === "overview" ? <OverviewView ctx={ctx} /> : <PrismView ctx={ctx} role={role} setRole={setRole} />}
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+</body>
+</html>

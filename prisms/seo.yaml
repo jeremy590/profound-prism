@@ -11,11 +11,12 @@ goal: >
   outputs by potential traffic impact, not raw visibility score.
 
 questions:
-  - Which of our pages have lost citation share this week?
+  - What are the three highest-leverage citation actions this week?
+  - How does our visibility break down by topic?
+  - Where do we sit on share of voice vs the pack?
+  - Which fan-out queries should we target with new or refreshed pages?
   - Which root domains are AI engines citing for our category that aren't ours?
   - Which AI engines are we under-cited on?
-  - Which topics in our category drive the most citations?
-  - Which competitor pages are winning the citations we want?
 
 prompt_treatment: lost_citation
 topic_treatment: decay
