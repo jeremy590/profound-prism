@@ -215,6 +215,17 @@ _SOURCE_GROUP = {
     "other": "other", "competition": "other", "owned": "other",
 }
 
+# Human labels for the raw citation_category keys (used in the CMO source-mix tile).
+CAT_LABEL = {
+    "owned": "Owned", "social": "Social", "earned_media": "Earned media",
+    "earned_institutions": "Institutions", "pr_wire": "PR / wire",
+    "competition": "Competitor sites", "other": "Other",
+}
+
+
+def cat_label(c):
+    return CAT_LABEL.get(c, (c or "—").replace("_", " ").title())
+
 
 def citation_graph(con, engine, region, top_n=24, peers_per_node=3, max_edges=50):
     """Node-graph payload for the earned-media constellation: the top third-party
@@ -436,6 +447,9 @@ def _summary_tile(role, region, badge="Cross-engine view"):
             tile["actions"] = d.get("actions", [])
     except Exception:
         pass
+    # roadmap teasers shown beneath the live recommendation (short descriptor + "coming soon")
+    tile["coming"] = [{"team": c["team"], "title": c["title"], "desc": c["desc"]}
+                      for c in COMING_SOON.get(role, [])]
     return tile
 
 
@@ -614,55 +628,143 @@ def _role_tiles(con, role, brand, engine, region):
     third = [d for d in doms if not d["owned"]]
 
     if role == "cmo":
+        # ---- derived, decision-grade reads (every CMO tile maps to a concern) ----
         net = sum(s["net"] for s in sent)
         cats = categories(con, engine, region)
         tp = topics_performance(con, engine, region)
+        fav = favourability(con, brand, engine, region)
+        gl = gap_to_leader(con, brand, region)          # per-engine, spans ALL engines
+
+        leader = lb[0] if lb else None
+        my_vis = me["visibility_score"] if me else None
+        my_sov = me["share_of_voice"] if me else None
+        is_leader = bool(leader and me and leader["asset_name"] == brand)
+        vis_gap = round((leader["visibility_score"] - my_vis) * 100, 1) if (leader and my_vis is not None) else None
+        sov_gap = round((leader["share_of_voice"] - my_sov) * 100, 1) if (leader and my_sov is not None) else None
+        # nearest competitor behind us — the threat to watch
+        behind = [r for r in lb if my_vis is not None and r["visibility_score"] < my_vis] if me else []
+        chaser = behind[0] if behind else None
+        chaser_gap = round((my_vis - chaser["visibility_score"]) * 100, 1) if chaser else None
+
+        # engine concentration: where we appear, strongest/weakest, widest exposure
+        present = sorted([g for g in gl if g["mine_vis"] is not None], key=lambda g: -(g["mine_vis"] or 0))
+        best_eng = present[0]["engine"] if present else "—"
+        worst_eng = present[-1]["engine"] if present else "—"
+        gapped = [g for g in gl if g["gap"] is not None and not g["is_leader"]]
+        worst_gap = max(gapped, key=lambda g: g["gap"]) if gapped else None
+        led = [g["engine"] for g in gl if g["is_leader"]]
+
+        # reputation: sharpest negative theme (risk) + strongest positive (asset)
+        neg_themes = sorted([s for s in sent if s["net"] < 0], key=lambda s: s["net"])
+        pos_themes = sorted([s for s in sent if s["net"] > 0], key=lambda s: -s["net"])
+        worst_theme, best_theme = (neg_themes[0] if neg_themes else None), (pos_themes[0] if pos_themes else None)
+
+        # source mix → which channel to fund. "other"/"competition" are catch-alls
+        # you can't buy against, so the budget signal points at the heaviest
+        # *fundable* channel (earned media, social, institutions, PR/wire).
+        _FUNDABLE = {"social", "earned_media", "earned_institutions", "pr_wire"}
+        owned_share = next((c["share"] for c in cats if c["cat"] == "owned"), 0.0)
+        top_src = next((c for c in cats if c["cat"] in _FUNDABLE), None)
+
+        # ---- insight strings (numbers, not platitudes) ----
+        threat_ins = (
+            ("You lead here, but " + chaser["asset_name"] + " is only " + str(chaser_gap) +
+             "pts behind — the nearest threat to watch.") if (is_leader and chaser) else
+            (leader["asset_name"] + " leads by " + str(vis_gap) + "pts" +
+             ((", and " + chaser["asset_name"] + " is closing from behind (−" + str(chaser_gap) + "pts).") if chaser else ".")
+             ) if (leader and vis_gap is not None) else
+            (brand + " is not tracked in this engine + region."))
+        engine_ins = (
+            ("Biggest exposure: " + worst_gap["engine"] + " — " + worst_gap["leader"] + " leads you by " +
+             str(worst_gap["gap"]) + "pts. " +
+             ("You lead on " + ", ".join(led) + "." if led else "You lead on no engine — visibility is broadly contested."))
+            if worst_gap else ("You lead on every engine here." if gl else "No per-engine data."))
+        fav_pct = fav["fav_ratio"]
+        rep_ins = (
+            ("Reputation risk: “" + worst_theme["theme"] + "” runs net " + str(worst_theme["net"]) +
+             " — the narrative most likely to cost deals." +
+             (" Strongest asset: “" + best_theme["theme"] + "” (+" + str(best_theme["net"]) + ")." if best_theme else ""))
+            if worst_theme else
+            ("Sentiment is positive across every tracked theme — no reputational red flags." if sent else
+             "No sentiment themes recorded for " + brand + " here."))
+        src_ins = (
+            ("Only " + str(owned_share) + "% of citations come from owned channels; AI leans on " +
+             cat_label(top_src["cat"]) + " (" + str(top_src["share"]) + "%) — fund that channel to move the answer.")
+            if (cats and top_src) else "No citation data for this engine + region.")
+
         return [
-            # 1 — AI-driven summary (render-only slot)
+            # 1 — AI-driven executive summary (render-only slot)
             cmo_brief_tile(region),
-            # 2 — Visibility: KPI strip + leaderboard vs competitors
+            # 2 — The headline: four numbers, each answering a board-level question
             {"type": "kpi-strip", "tiles": [
-                {"title": "The one number", "value": "#" + str(rank),
-                 "label": "visibility rank in " + ctx_label(engine, region),
-                 "caption": brand + " vs " + str(max(len(lb) - 1, 0)) + " competitors"},
-                {"title": "Visibility %", "value": (str(pct(me["visibility_score"])) + "%") if me else "—",
-                 "label": "of answers mention " + brand},
-                {"title": "Share of Voice %", "value": (str(pct(me["share_of_voice"])) + "%") if me else "—",
-                 "label": "of all brand mentions"},
-                {"title": "Sentiment", "value": "Positive" if net >= 0 else "Negative",
-                 "label": "net across themes", "caption": "net sum " + ("+" if net >= 0 else "") + str(net)},
+                {"title": "Visibility rank", "value": ("#" + str(rank)) if me else "—",
+                 "label": "of " + str(len(lb)) + " brands · " + ctx_label(engine, region),
+                 "caption": ("You lead the category here." if is_leader else
+                             (leader["asset_name"] + " leads · " + str(vis_gap) + "pts ahead") if (leader and vis_gap is not None) else
+                             brand + " not tracked here")},
+                {"title": "Share of voice", "value": (str(pct(my_sov)) + "%") if me else "—",
+                 "label": "of all brand mentions",
+                 "caption": ("Category SoV leader." if is_leader else
+                             (str(sov_gap) + "pts behind " + leader["asset_name"]) if (leader and sov_gap is not None) else "no data")},
+                {"title": "Brand favourability", "value": (str(fav_pct) + "%") if fav_pct is not None else "—",
+                 "label": "of sentiment is positive",
+                 "caption": (str(int(fav["pos"])) + " positive · " + str(int(fav["neg"])) + " negative" +
+                             ("  ⚠ net-negative" if (fav_pct is not None and fav_pct < 50) else ""))},
+                {"title": "Engine reach", "value": (str(len(present)) + "/" + str(len(gl))) if gl else "—",
+                 "label": "engines where " + brand + " appears",
+                 "caption": ("strongest " + best_eng + " · weakest " + worst_eng) if present else "not visible on any engine"},
             ]},
-            {"type": "leaderboard", "title": "Visibility vs top competitors",
-             "columns": ["Brand", "Visibility %", "Share of Voice %"],
-             "rows": [[r["asset_name"], pct(r["visibility_score"]), pct(r["share_of_voice"])] for r in lb[:5]],
+            # 3 — Competitive threat board: who's ahead, who's closing, by how much
+            {"type": "leaderboard", "title": "Competitive threat board", "subtitle": ctx_label(engine, region),
+             "columns": ["Brand", "Visibility %", "Share of Voice %", "Δ vs you (pts)"],
+             "rows": [[r["asset_name"], pct(r["visibility_score"]), pct(r["share_of_voice"]),
+                       (round((r["visibility_score"] - my_vis) * 100, 1) if my_vis is not None else None)] for r in lb[:6]],
              "highlight": brand,
-             "insight": ("Overall sentiment is favourable; visibility is the lever to push." if net >= 0
-                         else "Visibility holding, but overall sentiment is a watch-item."),
-             "caveats": "Top 5 of " + str(len(lb)) + " brands in this engine + region."},
-            # 3 — Citations: source-type mix + heaviest domains
-            {"type": "bar", "title": "Citations by source category", "subtitle": ctx_label(engine, region),
-             "columns": ["Category", "Citation Share %"],
-             "rows": [[c["cat"], c["share"]] for c in cats],
-             "insight": "Where AI engines source answers about the category — owned vs earned vs social.",
-             "caveats": "Share of total citation volume in this engine + region."},
-            {"type": "leaderboard", "title": "Top cited domains", "subtitle": ctx_label(engine, region),
-             "columns": ["Domain", "Citations", "Citation Share %"], "brandKey": None,
-             "rows": [[d["root_domain"], d["count"], d["share"]] for d in doms[:10]],
-             "ownedDomains": [d["root_domain"] for d in doms if d["owned"]],
-             "insight": (doms[0]["root_domain"] + " is the single heaviest citation source." if doms else "No citation data."),
-             "caveats": "Raw counts within this engine + region."},
-            # 4 — Top & bottom performing topics
+             "insight": threat_ins,
+             "caveats": "Δ vs you = competitor visibility minus yours, in points (positive = ahead of you). "
+                        "Top 6 of " + str(len(lb)) + " brands in this engine + region."},
+            # 4 — Engine concentration risk: where we win and where we're exposed
+            {"type": "table", "title": "Where you win & lose — by engine",
+             "subtitle": "visibility gap to each engine's leader · all engines · " + region,
+             "columns": ["Engine", "Your Visibility %", "Leader", "Leader Visibility %", "Gap (pts)"],
+             "rows": [[g["engine"],
+                       pct(g["mine_vis"]) if g["mine_vis"] is not None else 0.0,
+                       ("— you lead —" if g["is_leader"] else g["leader"]),
+                       pct(g["leader_vis"]),
+                       0.0 if g["is_leader"] else (g["gap"] if g["gap"] is not None else round((g["leader_vis"] or 0) * 100, 1))]
+                      for g in gl],
+             "empty": len(gl) == 0,
+             "insight": engine_ins,
+             "caveats": "Gap = leader visibility minus yours, in points. 0% under Your Visibility = not visible on that engine. "
+                        "Spans every engine regardless of the engine filter — this is your concentration risk."},
+            # 5 — Reputation: which narratives help vs hurt
+            {"type": "bar", "title": "Brand reputation — net sentiment by theme",
+             "subtitle": brand + " · " + ctx_label(engine, region),
+             "columns": ["Theme", "Net"],
+             "rows": [[s["theme"], s["net"]] for s in sent[:10]],
+             "insight": rep_ins,
+             "caveats": "Net = positive − negative mentions per theme. Negative bars are reputational risks to get ahead of."},
+            # 6 — Budget signal: which channel AI actually pulls answers from
+            {"type": "bar", "title": "Where AI sources its answers about the category",
+             "subtitle": ctx_label(engine, region),
+             "columns": ["Source type", "Citation Share %"],
+             "rows": [[cat_label(c["cat"]), c["share"]] for c in cats],
+             "insight": src_ins,
+             "caveats": "Share of total citation volume. Signals which channel — owned content, earned media, or social — "
+                        "to fund to shift how AI describes the category."},
+            # 7 — Narrative: where the category sees us strongest / weakest
             {"type": "bar", "title": "Topic performance — best to worst",
              "subtitle": "avg visibility by topic · " + OWNED_BRAND,
              "columns": ["Topic", "Visibility %"],
              "rows": [[t["topic"], pct(t["v"])] for t in tp],
-             "insight": (("Strongest: " + tp[0]["topic"] + "; weakest: " + tp[-1]["topic"] + ".") if tp else "No topic data."),
+             "insight": (("Strongest narrative: " + tp[0]["topic"] + "; weakest: " + tp[-1]["topic"] +
+                          " — the topic to brief content and PR against.") if tp else "No topic data."),
              "caveats": "Average visibility of tracked " + OWNED_BRAND + " prompts per topic."},
-            # 5 — Category-defining prompts (moved last)
+            # 8 — How customers describe the category (the CMO's "new language" question)
             {"type": "table", "title": "Category-defining prompts",
              "columns": ["Prompt", "Topic", "Visibility %"],
              "rows": [[p["prompt"], p["topic"], pct(p["visibility_score"])] for p in pr[:5]],
-             "insight": "The highest-visibility prompts shaping how the category is described.",
+             "insight": "The highest-visibility prompts shaping how AI frames the category — the language to own.",
              "caveats": "Top tracked prompts by visibility (single snapshot — not 'new this week')."},
         ]
 
@@ -1047,11 +1149,51 @@ def _annotate_cache(cards, region):
     return cards
 
 
+# Roadmap teasers — non-functional placeholder agents shown at the bottom of each
+# lens's Actions tab with a "Coming soon" pill. They never run (no downstream task,
+# not in PROFOUND_AGENTS); `coming: True` flips the card into placeholder mode.
+COMING_SOON = {
+    "cmo": [
+        {"id": "cmo_alerts", "team": "Exec", "title": "Competitor Move Alerts",
+         "desc": "Watch for a rival overtaking us on visibility or share of voice, or a sharp sentiment swing, and push an alert to the exec channel."},
+        {"id": "cmo_deck", "team": "Exec", "title": "Board Deck Generator",
+         "desc": "Turn the weekly exec brief into a ready-to-present slide deck."},
+    ],
+    "seo": [
+        {"id": "seo_schema", "team": "SEO", "title": "Structured-Data Auditor",
+         "desc": "Scan owned pages for missing schema / markup that's costing citations in AI answers."},
+        {"id": "seo_decay", "team": "SEO", "title": "Citation Decay Watcher",
+         "desc": "Alert when an owned page's citation share starts dropping, before visibility falls."},
+    ],
+    "pm": [
+        {"id": "pm_feature_gap", "team": "Product", "title": "Feature-Gap Detector",
+         "desc": "Surface features AI attributes to competitors but not to us, ranked by prompt volume."},
+        {"id": "pm_roadmap", "team": "Product", "title": "Roadmap Synthesizer",
+         "desc": "Cluster fan-out and adjacent questions into prioritised roadmap themes with suggested owners."},
+    ],
+    "brand": [
+        {"id": "brand_risk_monitor", "team": "Brand", "title": "Reputation-Risk Monitor",
+         "desc": "Watch net-negative themes and flag emerging spikes before they spread."},
+        {"id": "brand_sentiment_benchmark", "team": "Brand", "title": "Competitor Sentiment Benchmark",
+         "desc": "Track our theme-level sentiment versus rivals over time."},
+    ],
+    "pr": [
+        {"id": "pr_author_finder", "team": "PR", "title": "Journalist & Author Finder",
+         "desc": "Map cited domains to the specific authors / desks to pitch."},
+        {"id": "pr_citation_win", "team": "PR", "title": "Citation-Win Tracker",
+         "desc": "Monitor when a target domain that doesn't cite us yet starts citing us."},
+    ],
+}
+_COMING_SOON_IDS = {c["id"] for cards in COMING_SOON.values() for c in cards}
+
+
 def actions(role, ctx=None):
     region = (ctx or {}).get("region") or "United States"
     cards = action_cards(role)
     if not cards:
         cards = [dict(c) for c in ACTIONS.get(role, [])]   # fallback until artifact lands
+    # roadmap teasers always sit at the bottom of the lens
+    cards = list(cards) + [dict(c, coming=True) for c in COMING_SOON.get(role, [])]
     return {"actions": _annotate_cache(cards, region)}
 
 
@@ -1401,6 +1543,9 @@ def run_topic_agent_action(action_id, ctx):
 
 
 def run_action(action_id, ctx):
+    # Roadmap teasers are placeholders — never execute.
+    if action_id in _COMING_SOON_IDS:
+        return {"status": "coming_soon", "summary": "This agent isn't available yet."}
     # Actions wired to a live Profound Agent-Builder graph run it for real.
     if action_id in PROFOUND_AGENTS:
         return run_topic_agent_action(action_id, ctx)
