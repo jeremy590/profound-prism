@@ -14,14 +14,6 @@
         "region": "United States",
         "top_third_party": ["reddit.com", "youtube.com", "medium.com", "linkedin.com", "arxiv.org"]
       }
-    },
-    {
-      "team": "PR",
-      "agent": "pr_beats",
-      "text": "build the **domain → beat map** (reddit→Writing, youtube→Reasoning, arxiv→Math) for targeted outreach.",
-      "inputs": {
-        "region": "United States"
-      }
     }
   ],
   "context": {

@@ -69,7 +69,7 @@ def prism(role):
 def prism_actions(role):
     if role not in ROLES:
         return jsonify(error=f"unknown role '{role}'"), 404
-    return jsonify(dd.actions(role))
+    return jsonify(dd.actions(role, _ctx()))
 
 
 @app.route("/api/actions/<action_id>/run", methods=["POST"])

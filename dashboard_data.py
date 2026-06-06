@@ -181,6 +181,130 @@ def domains(con, engine, region, limit=12):
             for d, c in ranked][:limit]
 
 
+def domains_by_beat(con, engine, region, per_topic=10):
+    """Third-party domains grouped by the topic *beat* they're cited for — used to
+    let the PR lead filter the outreach list by beat. Unlike `domains()` (one
+    dominant beat per domain), a domain appears under every topic it's cited for."""
+    if _is_all(engine):
+        rows = _q(con,
+            "SELECT ci.root_domain d, t.name topic, SUM(ci.count) c "
+            "FROM fact_citation ci JOIN region r ON r.id=ci.region_id "
+            "JOIN prompt p ON p.id=ci.prompt_id JOIN topic t ON t.id=p.topic_id "
+            "WHERE r.name=? AND ci.citation_category!='owned' "
+            "GROUP BY ci.root_domain, t.name ORDER BY c DESC", (region,))
+    else:
+        rows = _q(con,
+            "SELECT ci.root_domain d, t.name topic, SUM(ci.count) c "
+            "FROM fact_citation ci JOIN model m ON m.id=ci.model_id JOIN region r ON r.id=ci.region_id "
+            "JOIN prompt p ON p.id=ci.prompt_id JOIN topic t ON t.id=p.topic_id "
+            "WHERE m.name=? AND r.name=? AND ci.citation_category!='owned' "
+            "GROUP BY ci.root_domain, t.name ORDER BY c DESC", (engine, region))
+    by = {}
+    for r in rows:
+        by.setdefault(r["topic"], [])
+        if len(by[r["topic"]]) < per_topic:
+            by[r["topic"]].append([r["d"], r["c"]])
+    return by
+
+
+# source-type buckets for the citation constellation: each citation_category
+# maps to one of three groups the PR / earned-media lead thinks in.
+_SOURCE_GROUP = {
+    "social": "social",
+    "earned_media": "editorial", "earned_institutions": "editorial", "pr_wire": "editorial",
+    "other": "other", "competition": "other", "owned": "other",
+}
+
+
+def citation_graph(con, engine, region, top_n=24, peers_per_node=3, max_edges=50):
+    """Node-graph payload for the earned-media constellation: the top third-party
+    source domains as planets (sized by citations, clustered Social/Editorial/Other),
+    linked by pruned co-citation edges (how often two sources are cited in the same
+    AI answers). No central brand node — the layout is the source landscape itself.
+
+    Citations are category-wide (fact_citation is keyed by prompt, not by asset), so
+    the constellation reflects the category's source mix, not a single brand."""
+    # 1) top-N third-party domains by citations, honoring the engine/region filter.
+    # each root_domain maps to exactly one citation_category in this snapshot, so
+    # MIN(category) is its category — no correlated subquery needed.
+    if _is_all(engine):
+        node_rows = _q(con,
+            "SELECT ci.root_domain d, SUM(ci.count) c, MIN(ci.citation_category) cat "
+            "FROM fact_citation ci JOIN region r ON r.id=ci.region_id "
+            "WHERE r.name=? AND ci.citation_category!='owned' "
+            "GROUP BY ci.root_domain ORDER BY c DESC LIMIT ?", (region, top_n))
+        cit_filter, cit_params = "JOIN region r ON r.id=ci.region_id WHERE r.name=?", (region,)
+    else:
+        node_rows = _q(con,
+            "SELECT ci.root_domain d, SUM(ci.count) c, MIN(ci.citation_category) cat "
+            "FROM fact_citation ci JOIN model m ON m.id=ci.model_id JOIN region r ON r.id=ci.region_id "
+            "WHERE m.name=? AND r.name=? AND ci.citation_category!='owned' "
+            "GROUP BY ci.root_domain ORDER BY c DESC LIMIT ?", (engine, region, top_n))
+        cit_filter = "JOIN model m ON m.id=ci.model_id JOIN region r ON r.id=ci.region_id WHERE m.name=? AND r.name=?"
+        cit_params = (engine, region)
+
+    nodes = [{"id": r["d"], "label": r["d"], "count": r["c"],
+              "group": _SOURCE_GROUP.get(r["cat"], "other")} for r in node_rows]
+    keep = {n["id"] for n in nodes}
+
+    # 2) peer co-citation edges. Pre-filter to the kept domains as distinct
+    # (prompt, domain) pairs in a CTE, then self-join that tiny set — far cheaper
+    # than self-joining the full 33k-row citation table.
+    edges = []
+    if len(keep) > 1:
+        placeholders = ",".join("?" * len(keep))
+        ids = list(keep)
+        raw = _q(con,
+            "WITH f AS (SELECT DISTINCT ci.prompt_id pid, ci.root_domain dom "
+            "  FROM fact_citation ci " + cit_filter +
+            "  AND ci.root_domain IN (" + placeholders + ")) "
+            "SELECT a.dom s, b.dom t, COUNT(*) w "
+            "FROM f a JOIN f b ON a.pid=b.pid AND a.dom<b.dom "
+            "GROUP BY a.dom, b.dom ORDER BY w DESC",
+            cit_params + tuple(ids))
+        # 3) prune for legibility: keep each node's strongest few peers, then cap.
+        kept_per = {}
+        chosen = []
+        for e in raw:
+            if kept_per.get(e["s"], 0) < peers_per_node or kept_per.get(e["t"], 0) < peers_per_node:
+                chosen.append(e)
+                kept_per[e["s"]] = kept_per.get(e["s"], 0) + 1
+                kept_per[e["t"]] = kept_per.get(e["t"], 0) + 1
+            if len(chosen) >= max_edges:
+                break
+        edges = [{"source": e["s"], "target": e["t"], "weight": e["w"]} for e in chosen]
+
+    # headline insight: dominant group + heaviest planets
+    by_group = {}
+    for n in nodes:
+        by_group[n["group"]] = by_group.get(n["group"], 0) + n["count"]
+    label = {"social": "Social", "editorial": "Editorial", "other": "Other"}
+    top_planets = [n["label"] for n in nodes[:2]]
+    if nodes:
+        lead = max(by_group, key=by_group.get)
+        insight = (label[lead] + " dominates the citation mix" +
+                   (" — heaviest planets are " + " & ".join(top_planets) + "." if top_planets else "."))
+    else:
+        insight = "No third-party citations for this engine + region."
+
+    return {
+        "type": "constellation",
+        "title": "Citation constellation — how top sources cluster",
+        "subtitle": ctx_label(engine, region),
+        "groups": [
+            {"id": "social", "label": "Social", "color": "var(--accent)"},
+            {"id": "editorial", "label": "Editorial", "color": "var(--green)"},
+            {"id": "other", "label": "Other", "color": "var(--text-tertiary)"},
+        ],
+        "nodes": nodes,
+        "edges": edges,
+        "insight": insight,
+        "caveats": ("Top " + str(top_n) + " third-party domains by citations. Planet size = citations; "
+                    "a link = the two sources cited in the same AI answers (co-citation), pruned to each "
+                    "domain's strongest peers."),
+    }
+
+
 def prompts(con, engine, region, limit=10, order="vis"):
     by = {"vis": "visibility_score DESC", "gap": "citation_rank DESC"}.get(order, "visibility_score DESC")
     if _is_all(engine):
@@ -751,11 +875,15 @@ def _role_tiles(con, role, brand, engine, region):
         ]
 
     if role == "pr":
-        not_citing = [d for d in third if d["beat"] != "—"][:6]
+        not_citing = [d for d in third if d["beat"] != "—"][:12]
         cats = categories(con, engine, region)
+        beat_map = domains_by_beat(con, engine, region)
+        beat_topics = sorted(beat_map, key=lambda t: -sum(c for _, c in beat_map[t]))
         return [
             # AI summary (render-only slot; mirrors the other role views)
             _summary_tile("pr", region, badge="Earned media"),
+            # Citation constellation — the centerpiece: how the top sources cluster
+            citation_graph(con, engine, region),
             {"type": "leaderboard", "title": "Third-party domains by citations", "columns": ["Domain", "Citations"],
              "rows": [[d["root_domain"], d["count"]] for d in third[:10]],
              "insight": "The domains shaping category answers — your outreach universe.",
@@ -768,10 +896,13 @@ def _role_tiles(con, role, brand, engine, region):
              "rows": [[c["cat"], c["share"]] for c in cats],
              "insight": "Social and earned media dominate the citation mix.",
              "caveats": "Share of total citation volume."},
-            {"type": "table", "title": "Domains not citing us", "columns": ["Domain", "Topic beat", "Citations"],
-             "rows": [[d["root_domain"], d["beat"], d["count"]] for d in not_citing],
-             "insight": "Cited for the category but not owned — prime outreach list.",
-             "caveats": "Citation-curated across all prompts."},
+            {"type": "comp-filter", "title": "Domains not citing us", "subtitle": ctx_label(engine, region),
+             "topics": beat_topics,
+             "overall": {"columns": ["Domain", "Topic beat", "Citations"],
+                         "rows": [[d["root_domain"], d["beat"], d["count"]] for d in not_citing]},
+             "byTopic": {t: {"columns": ["Domain", "Citations in beat"], "rows": beat_map[t]} for t in beat_topics},
+             "insight": "Cited for the category but not owned — prime outreach list. Filter by topic beat to target the pitch.",
+             "caveats": "Third-party domains (excludes owned). All = each domain's dominant beat; a beat = citations for that topic."},
         ]
 
     return []
@@ -899,11 +1030,29 @@ def cmo_action_cards():        # back-compat alias
     return action_cards("cmo")
 
 
-def actions(role):
+def _annotate_cache(cards, region):
+    """Flag which cards are backed by a live Profound agent and whether that agent
+    already has a cached run for this region's selected topic (so the UI can show
+    the result immediately instead of a 'Run agent' button)."""
+    for c in cards:
+        spec = PROFOUND_AGENTS.get(c.get("id"))
+        if spec:
+            brand = spec.get("brand", OWNED_BRAND)
+            topic = _select_topic(spec, region, brand)
+            c["live"] = True
+            c["cached"] = bool(topic and _cache_get(spec["agent_id"], topic["topic_id"], brand))
+        else:
+            c["live"] = False
+            c["cached"] = False
+    return cards
+
+
+def actions(role, ctx=None):
+    region = (ctx or {}).get("region") or "United States"
     cards = action_cards(role)
-    if cards:
-        return {"actions": cards}
-    return {"actions": ACTIONS.get(role, [])}   # fallback until the artifact lands
+    if not cards:
+        cards = [dict(c) for c in ACTIONS.get(role, [])]   # fallback until artifact lands
+    return {"actions": _annotate_cache(cards, region)}
 
 
 # ---- live Profound agent activations ----------------------------------------
@@ -935,6 +1084,14 @@ PROFOUND_AGENTS = {
         "input_var": "92ee5f6e-fcd2-4b4f-805a-e2a63fd5067b",   # "Payload" (JSON string)
         "output_var": "abead634-ca39-4d79-be4b-28bb69d6bef8",  # "LLM Response" (JSON string)
         "brand": OWNED_BRAND, "topic_metric": "visibility", "table": "fanout",
+    },
+    "pr_pitch": {  # Earned Media Lead · Strategic Citation Outreach
+        "name": "Strategic Citation Outreach",
+        "agent_id": "019e9eaa-7c51-7ab2-9394-a97521cfb86a",
+        # input_var/output_var auto-discovered from the live schema
+        "brand": OWNED_BRAND, "payload": "brand_count", "topic_count": 3,
+        "table": "citation",                                   # the worst topics it'll target
+        "poll_s": 900,                                          # heavier agent (crawls web)
     },
 }
 PROFOUND_AGENTS["brand_risk_response"] = PROFOUND_AGENTS["brand_risk"]  # CMO dispatch name
@@ -1010,12 +1167,32 @@ def _lowest_visibility_topic(region, brand):
 
 
 def _select_topic(spec, region, brand):
-    """Pick the topic to run the agent on, per the spec's performance metric."""
+    """Pick the topic to run the agent on, per the spec's performance metric.
+    For 'brand_count' agents (the agent self-selects its own worst topics) there's
+    no single topic — return a synthetic target whose id keys the cache by count."""
+    if spec.get("payload") == "brand_count":
+        n = spec.get("topic_count", 3)
+        return {"topic_id": "count:" + str(n), "name": str(n) + " worst-performing topics", "synthetic": True}
     if spec.get("topic_metric") == "citation":
         return _lowest_citation_topic(region, brand)
     if spec.get("topic_metric") == "visibility":
         return _lowest_visibility_topic(region, brand)
     return _worst_topic(region, brand)
+
+
+def _payload_for(spec, topic, brand):
+    """The JSON object sent to the agent (serialised to a string)."""
+    if spec.get("payload") == "brand_count":
+        return {"brand": brand, "topic_count": spec.get("topic_count", 3)}
+    return {"topic_id": topic["topic_id"], "brand": brand}
+
+
+def _configured_for(spec, topic, brand):
+    """Human-readable 'Configured with' chips for the run block."""
+    if spec.get("payload") == "brand_count":
+        return {"Brand": brand, "Topic count": spec.get("topic_count", 3)}
+    return {"Topic": topic["name"] if topic else "—", "Brand": brand,
+            "topic_id": topic["topic_id"] if topic else None}
 
 
 def _agent_url(agent_id, brand):
@@ -1044,8 +1221,7 @@ def _activate_topic_agent(spec, topic, brand, poll_s=300):
     block = {"name": spec["name"], "agentId": spec["agent_id"], "runId": None,
              "status": "error", "report": "", "brief": None,
              "url": _agent_url(spec["agent_id"], brand),
-             "configured": {"Topic": topic["name"] if topic else "—", "Brand": brand,
-                            "topic_id": topic["topic_id"] if topic else None}}
+             "configured": _configured_for(spec, topic, brand)}
     if not topic:
         block["report"] = "No qualifying topic found for " + brand + "."
         return block
@@ -1053,7 +1229,7 @@ def _activate_topic_agent(spec, topic, brand, poll_s=300):
         rl = AgentRunLoop()                                  # uses PROFOUND_API_KEY
         in_var, out_var, name = _resolve_io(rl, spec)
         block["name"] = name
-        payload = json.dumps({"topic_id": topic["topic_id"], "brand": brand})
+        payload = json.dumps(_payload_for(spec, topic, brand))
         run = rl.run_agent(spec["agent_id"], {in_var: payload})
         block["runId"] = run.get("id")
         res = rl.poll_run(spec["agent_id"], block["runId"], timeout_s=poll_s)
@@ -1151,6 +1327,11 @@ def _context_table(spec, region):
 def _topic_summary(spec, brand, topic, agent_run, cache_note):
     name = agent_run["name"]
     status = agent_run["status"]
+    if spec.get("payload") == "brand_count":
+        n = spec.get("topic_count", 3)
+        lead = ("Targeting the " + str(n) + " worst-performing topics for " + brand +
+                " (agent self-selects). ")
+        return lead + "Ran the Profound '" + name + "' agent (" + status + ")" + cache_note + "."
     if spec.get("topic_metric") == "visibility":
         val = ("visibility " + str(pct(topic["vis"])) + "%") if topic else "n/a"
         lead = "Weakest use-case topic for " + brand + " is '" + (topic["name"] if topic else "—") + "' (" + val + "). "
@@ -1187,7 +1368,7 @@ def run_topic_agent_action(action_id, ctx):
                 "name": c["name"] or spec["name"], "agentId": spec["agent_id"],
                 "runId": c["run_id"], "status": c["status"], "report": c["output"], "brief": brief,
                 "url": _agent_url(spec["agent_id"], brand),
-                "configured": {"Topic": topic["name"], "Brand": brand, "topic_id": topic["topic_id"]},
+                "configured": _configured_for(spec, topic, brand),
                 "cached": True, "ts": c["created_at"]}
     if agent_run is None:                                # cache miss / forced → live run
         agent_run = _activate_topic_agent(spec, topic, brand, poll_s=spec.get("poll_s", 300))

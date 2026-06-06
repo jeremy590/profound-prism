@@ -269,6 +269,22 @@
   @keyframes pf-shim { to { background-position: -200% 0; } }
   .fade { animation: pf-fade var(--duration-fast) ease-out; }
   @keyframes pf-fade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+  /* Citation constellation */
+  .constel { width: 100%; height: auto; display: block; background: radial-gradient(120% 120% at 50% 18%, #fff 0%, var(--prism-page) 70%); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); user-select: none; touch-action: none; }
+  .constel-edge { stroke: var(--text-tertiary); opacity: 0.22; stroke-linecap: round; transition: opacity var(--duration-fast), stroke var(--duration-fast); }
+  .constel-edge--on { stroke: var(--accent); opacity: 0.55; }
+  .constel-disc { stroke: rgba(255,255,255,0.92); stroke-width: 1.25; filter: url(#constelShadow); transition: stroke-width var(--duration-fast); }
+  .constel-sheen { pointer-events: none; }
+  .constel-node { cursor: grab; }
+  .constel-node:active { cursor: grabbing; }
+  .constel-node--on .constel-disc { stroke: #fff; stroke-width: 2.25; }
+  .constel-lbl { font-family: var(--font-mono); font-size: 7.5px; font-weight: 500; fill: var(--text-secondary); fill-opacity: 0.6; text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: var(--prism-page); stroke-width: 2.5px; stroke-linejoin: round; }
+  .constel-node--on .constel-lbl { fill: var(--text-primary); fill-opacity: 1; font-weight: 600; }
+  .constel-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 12px; }
+  .constel-leg { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-secondary); }
+  .constel-leg i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+  .constel-leg--hint { margin-left: auto; color: var(--text-tertiary); font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; }
 </style>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -544,7 +560,7 @@ Object.assign(api, {
   getMeta: () => jget("/api/meta"),
   getOverview: (ctx) => jget("/api/overview" + qs(ctx)),
   getPrism: ({ role, ...ctx }) => jget("/api/prism/" + role + qs(ctx)),
-  getActions: ({ role }) => jget("/api/prism/" + role + "/actions"),
+  getActions: ({ role, ...ctx }) => jget("/api/prism/" + role + "/actions" + qs(ctx)),
   runAction: (actionId, ctx) => jpost("/api/actions/" + actionId + "/run", ctx),
 });
 
@@ -959,6 +975,178 @@ function KpiStrip({ tile }) {
   return <div className="tiles tiles--kpi">{tile.tiles.map((k, i) => <KpiCard key={i} k={k} />)}</div>;
 }
 
+/* Citation constellation — a dynamic, hand-rolled force-directed graph.
+   Brand sits at the centre as a sun; third-party source domains orbit as planets
+   sized by citations, clustered by source group, with peer co-citation links.
+   No external graph library — a small velocity-Verlet-ish sim rendered as SVG. */
+const CONSTEL_W = 760, CONSTEL_H = 460;
+const GROUP_ANGLE = { social: -Math.PI / 2, editorial: -Math.PI / 2 + (2 * Math.PI) / 3, other: -Math.PI / 2 + (4 * Math.PI) / 3 };
+
+function ConstellationTile({ tile }) {
+  const svgRef = React.useRef(null);
+  const nodesRef = React.useRef([]);
+  const alphaRef = React.useRef(0);
+  const dragRef = React.useRef(null);
+  const rafRef = React.useRef(0);
+  const stepRef = React.useRef(null);
+  const aliveRef = React.useRef(false);
+  const [, force] = useState(0);
+  const [hover, setHover] = useState(null);
+
+  const cx = CONSTEL_W / 2, cy = CONSTEL_H / 2;
+  const colorOf = {};
+  (tile.groups || []).forEach((g) => { colorOf[g.id] = g.color; });
+
+  // (re)build the simulation whenever the data changes
+  useEffect(() => {
+    const data = tile.nodes || [];
+    const maxC = Math.max(1, ...data.map((n) => n.count));
+    const nodes = data.map((n, i) => {
+      const ga = GROUP_ANGLE[n.group] != null ? GROUP_ANGLE[n.group] : 0;
+      const spread = ((i % 5) - 2) * 0.18;
+      const r = 8 + 22 * Math.sqrt(n.count / maxC);
+      const ax = cx + Math.cos(ga) * 165, ay = cy + Math.sin(ga) * 130;
+      return {
+        id: n.id, label: n.label, count: n.count, group: n.group, r,
+        ax, ay,
+        x: ax + Math.cos(ga + spread) * (40 + (i % 7) * 9),
+        y: ay + Math.sin(ga + spread) * (40 + (i % 7) * 9),
+        vx: 0, vy: 0,
+      };
+    });
+    nodesRef.current = nodes;
+    alphaRef.current = 1;
+    cancelAnimationFrame(rafRef.current);
+    const maxW = Math.max(1, ...(tile.edges || []).map((e) => e.weight));
+    const byId = {}; nodes.forEach((n) => { byId[n.id] = n; });
+
+    const step = () => {
+      const a = alphaRef.current;
+      const ns = nodesRef.current;
+      // pairwise repulsion + collision
+      for (let i = 0; i < ns.length; i++) {
+        const n = ns[i]; let fx = 0, fy = 0;
+        for (let j = 0; j < ns.length; j++) {
+          if (i === j) continue;
+          const m = ns[j];
+          let dx = n.x - m.x, dy = n.y - m.y, d2 = dx * dx + dy * dy || 0.01;
+          const d = Math.sqrt(d2);
+          const rep = (260 * (n.r + m.r)) / d2;
+          fx += (dx / d) * rep; fy += (dy / d) * rep;
+          const overlap = n.r + m.r + 6 - d;
+          if (overlap > 0) { fx += (dx / d) * overlap * 0.5; fy += (dy / d) * overlap * 0.5; }
+        }
+        // mild gravity to keep the whole field framed + group-anchor clustering
+        fx += (cx - n.x) * 0.006; fy += (cy - n.y) * 0.006;
+        fx += (n.ax - n.x) * 0.016; fy += (n.ay - n.y) * 0.016;
+        n._fx = fx; n._fy = fy;
+      }
+      // peer link springs (stronger co-citation pulls closer)
+      (tile.edges || []).forEach((e) => {
+        const s = byId[e.source], t = byId[e.target];
+        if (!s || !t) return;
+        const wn = e.weight / maxW;
+        let dx = t.x - s.x, dy = t.y - s.y, d = Math.hypot(dx, dy) || 0.01;
+        const restL = 70 + 110 * (1 - wn), k = 0.006 + 0.02 * wn;
+        const f = ((d - restL) / d) * k;
+        s._fx += dx * f; s._fy += dy * f; t._fx -= dx * f; t._fy -= dy * f;
+      });
+      // integrate (centre node is implicit — never moves)
+      for (let i = 0; i < ns.length; i++) {
+        const n = ns[i];
+        if (dragRef.current === i) { n.vx = 0; n.vy = 0; continue; }
+        n.vx = (n.vx + n._fx * a) * 0.82; n.vy = (n.vy + n._fy * a) * 0.82;
+        n.x += n.vx; n.y += n.vy;
+        const pad = n.r + 6;
+        n.x = Math.max(pad, Math.min(CONSTEL_W - pad, n.x));
+        n.y = Math.max(pad, Math.min(CONSTEL_H - pad, n.y));
+      }
+      alphaRef.current = a * 0.985;
+      force((f) => f + 1);
+      if (alphaRef.current > 0.02 || dragRef.current != null) { rafRef.current = requestAnimationFrame(step); }
+      else { aliveRef.current = false; }
+    };
+    stepRef.current = step;
+    aliveRef.current = true;
+    rafRef.current = requestAnimationFrame(step);
+    return () => { aliveRef.current = false; cancelAnimationFrame(rafRef.current); };
+  }, [tile]);
+
+  // (re)start the sim loop if it has cooled down
+  const ensureAlive = () => {
+    if (!aliveRef.current && stepRef.current) { aliveRef.current = true; rafRef.current = requestAnimationFrame(stepRef.current); }
+  };
+  const toLocal = (e) => {
+    const svg = svgRef.current; const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  };
+  const onDown = (i) => (e) => { e.preventDefault(); dragRef.current = i; alphaRef.current = Math.max(alphaRef.current, 0.4); ensureAlive(); };
+  const onMove = (e) => {
+    if (dragRef.current == null) return;
+    const p = toLocal(e); const n = nodesRef.current[dragRef.current];
+    if (n) { n.x = p.x; n.y = p.y; n.vx = 0; n.vy = 0; }
+    alphaRef.current = Math.max(alphaRef.current, 0.3); ensureAlive();
+  };
+  const onUp = () => { if (dragRef.current != null) { dragRef.current = null; alphaRef.current = Math.max(alphaRef.current, 0.4); ensureAlive(); } };
+
+  const ns = nodesRef.current;
+  const byId = {}; ns.forEach((n) => { byId[n.id] = n; });
+  const empty = !ns.length;
+  const maxEdgeW = Math.max(1, ...(tile.edges || []).map((x) => x.weight));
+
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">
+        <div className="constel-legend">
+          {(tile.groups || []).map((g) => (
+            <span key={g.id} className="constel-leg"><i style={{ background: g.color }} />{g.label}</span>
+          ))}
+          <span className="constel-leg constel-leg--hint">drag a planet · size = citations · link = co-citation</span>
+        </div>
+        {empty ? <div className="empty">No third-party citations for this engine + region.</div> : (
+          <svg ref={svgRef} className="constel" viewBox={`0 0 ${CONSTEL_W} ${CONSTEL_H}`}
+               onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={() => { onUp(); setHover(null); }}>
+            <defs>
+              {/* top-left highlight that turns a flat disc into a sphere */}
+              <radialGradient id="constelSheen" cx="0.35" cy="0.30" r="0.7">
+                <stop offset="0%" stopColor="#fff" stopOpacity="0.5" />
+                <stop offset="42%" stopColor="#fff" stopOpacity="0.10" />
+                <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+              </radialGradient>
+              <filter id="constelShadow" x="-40%" y="-40%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="1" stdDeviation="1.4" floodColor="#0E0E10" floodOpacity="0.18" />
+              </filter>
+            </defs>
+            {/* peer co-citation links */}
+            {(tile.edges || []).map((e, i) => {
+              const s = byId[e.source], t = byId[e.target];
+              if (!s || !t) return null;
+              const on = hover != null && (ns[hover].id === e.source || ns[hover].id === e.target);
+              return <line key={"e" + i} x1={s.x} y1={s.y} x2={t.x} y2={t.y}
+                           className={"constel-edge" + (on ? " constel-edge--on" : "")}
+                           style={{ strokeWidth: 0.6 + 2.4 * (e.weight / maxEdgeW) }} />;
+            })}
+            {/* planets — every planet labelled */}
+            {ns.map((n, i) => (
+              <g key={"n" + i} transform={`translate(${n.x},${n.y})`}
+                 className={"constel-node" + (hover === i ? " constel-node--on" : "")}
+                 onMouseDown={onDown(i)} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+                <title>{n.label} · {n.count.toLocaleString("en-US")} citations</title>
+                <circle className="constel-disc" r={n.r} style={{ fill: colorOf[n.group] || "var(--text-tertiary)" }} />
+                <circle className="constel-sheen" r={n.r} fill="url(#constelSheen)" />
+                <text className="constel-lbl" y={n.r + 10}>{n.label}</text>
+              </g>
+            ))}
+          </svg>
+        )}
+      </div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
 function withBold(text) {
   // Render **significant bits** as <strong>; everything else stays plain text.
   return String(text).split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
@@ -1102,6 +1290,7 @@ function Tile({ tile, onAction }) {
     case "chips": return <ChipsTile tile={tile} />;
     case "comp-filter": return <CompFilterTile tile={tile} />;
     case "topic-sentiment": return <TopicSentimentTile tile={tile} />;
+    case "constellation": return <ConstellationTile tile={tile} />;
     default: return null;
   }
 }
@@ -1168,43 +1357,49 @@ function humanize(key) {
   return String(key).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// Pull the most likely "title" / "body" fields off a brief list-item object.
-function itemTitle(o) { return o.theme || o.title || o.name || o.action_title || o.learning || o.headline || null; }
-function strOrNull(v) { return typeof v === "string" && v.trim() ? v : null; }
-function itemBody(o) { return strOrNull(o.description) || strOrNull(o.summary) || strOrNull(o.detail) || strOrNull(o.action) || strOrNull(o.recommendation) || strOrNull(o.text) || strOrNull(o.insight) || strOrNull(o.brief) || null; }
+// Pick the best "title" field off a brief list-item object (broad fallback set).
+function itemTitle(o) {
+  return o.theme || o.title || o.name || o.action_title || o.learning || o.headline ||
+         o.subject_line || o.domain || o.topic_name || o.target_url || null;
+}
+const TITLE_CANDIDATES = ["theme", "title", "name", "action_title", "learning", "headline", "subject_line", "domain", "topic_name", "target_url"];
 
 // Recursively render any JSON value (string/number/array/object) without crashing.
 function Val({ v }) {
-  if (v == null) return null;
+  if (v == null || v === "") return null;
   if (Array.isArray(v)) return <ul style={{ margin: "3px 0 0", paddingLeft: 16 }}>{v.map((x, i) => <li key={i} style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.5 }}><Val v={x} /></li>)}</ul>;
-  if (typeof v === "object") return <div style={{ marginTop: 3 }}>{Object.entries(v).map(([k, val], i) => <div key={i} style={{ fontSize: 12.5, lineHeight: 1.5 }}><b style={{ color: "var(--text-tertiary)", fontWeight: 600 }}>{humanize(k)}:</b> <Val v={val} /></div>)}</div>;
-  return <React.Fragment>{String(v)}</React.Fragment>;
+  if (typeof v === "object") return <div style={{ marginTop: 3 }}>{Object.entries(v).map(([k, val], i) => <KV key={i} k={k} v={val} />)}</div>;
+  return <span style={{ whiteSpace: "pre-wrap" }}>{String(v)}</span>;
+}
+
+// One "Label: value" line — short scalars stay inline, long/nested values wrap below.
+function KV({ k, v }) {
+  if (v == null || v === "") return null;
+  const label = <b style={{ color: "var(--text-tertiary)", fontWeight: 600 }}>{humanize(k)}:</b>;
+  const long = (typeof v === "string" && (v.length > 60 || v.includes("\n"))) || (v && typeof v === "object");
+  return (
+    <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 4 }}>
+      {label}{long ? null : <span> {String(v)}</span>}
+      {long ? <div style={{ marginTop: 2, color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}><Val v={v} /></div> : null}
+    </div>
+  );
 }
 
 function BriefSection({ title, items }) {
-  const TITLE_KEYS = new Set(["theme", "title", "name", "action_title", "learning", "headline"]);
-  const BODY_KEYS = new Set(["description", "summary", "detail", "action", "recommendation", "text", "insight", "brief"]);
   return (
     <div style={{ marginTop: 16 }}>
       <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text-tertiary)", margin: "0 0 8px" }}>{title}</h4>
-      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {items.map((it, i) => {
           if (it && typeof it === "object") {
-            const t = itemTitle(it), b = itemBody(it), ev = it.evidence_sources || it.sources;
-            // Short scalar fields (priority, format, rank, …) → chips.
-            const meta = Object.entries(it).filter(([k, v]) => !TITLE_KEYS.has(k) && !BODY_KEYS.has(k) && k !== "evidence_sources" && k !== "sources" && (typeof v === "string" || typeof v === "number"));
-            // Remaining complex fields (nested objects/arrays) → recursive render.
-            const complex = Object.entries(it).filter(([k, v]) => !TITLE_KEYS.has(k) && k !== "evidence_sources" && k !== "sources" && v && typeof v === "object" && !(BODY_KEYS.has(k) && b));
+            const titleKey = TITLE_CANDIDATES.find((k) => typeof it[k] === "string" && it[k].trim());
+            const t = titleKey ? it[titleKey] : null;
+            const ev = it.evidence_sources || it.sources;
+            const fields = Object.entries(it).filter(([k]) => k !== titleKey && k !== "evidence_sources" && k !== "sources");
             return (
               <div key={i} style={{ borderLeft: "2px solid var(--border-strong)", paddingLeft: 11 }}>
-                {(t || meta.length) ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    {t ? <span style={{ fontSize: 13.5, fontWeight: 600 }}>{t}</span> : null}
-                    {meta.map(([k, v], j) => <span key={j} className="act__chip" style={{ fontSize: 10.5 }}><b>{humanize(k)}:</b> {String(v)}</span>)}
-                  </div>
-                ) : null}
-                {b ? <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, marginTop: 2 }}>{b}</div> : null}
-                {complex.map(([k, v], j) => <div key={j} style={{ marginTop: 5 }}><div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-tertiary)" }}>{humanize(k)}</div><Val v={v} /></div>)}
+                {t ? <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>{t}</div> : null}
+                {fields.map(([k, v], j) => <KV key={j} k={k} v={v} />)}
                 {Array.isArray(ev) && ev.length ? <div style={{ display: "flex", gap: 5, marginTop: 5 }}>{ev.map((s, j) => <span key={j} className="act__chip" style={{ fontSize: 10.5 }}>{String(s)}</span>)}</div> : null}
               </div>
             );
@@ -1217,11 +1412,18 @@ function BriefSection({ title, items }) {
 }
 
 function CSuiteBrief({ brief }) {
-  // Header scalars used in the badge row; everything else renders in key order:
-  // list → section, string → labeled paragraph (executive_summary unlabeled), dict → skip.
+  // Header scalars → badge row; everything else renders in key order:
+  // list → section, string → labeled paragraph (executive_summary unlabeled), dict → labeled block.
   const header = new Set(["brand", "topic_id", "overall_sentiment", "negative_sentiment_pct"]);
+  const hide = new Set(["metadata", "cross_topic_patterns"]);   // not surfaced in the UI
   const sentiment = brief.overall_sentiment ? humanize(brief.overall_sentiment) : null;
   const pct = brief.negative_sentiment_pct;
+  const labeledBlock = (k, body) => (
+    <div key={k} style={{ marginTop: 16 }}>
+      <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text-tertiary)", margin: "0 0 6px" }}>{humanize(k)}</h4>
+      {body}
+    </div>
+  );
   return (
     <div style={{ padding: "14px 16px" }}>
       {(sentiment || pct != null) ? (
@@ -1231,19 +1433,15 @@ function CSuiteBrief({ brief }) {
         </div>
       ) : null}
       {Object.keys(brief).map((k) => {
-        if (header.has(k)) return null;
+        if (header.has(k) || hide.has(k)) return null;
         const v = brief[k];
         if (Array.isArray(v) && v.length) return <BriefSection key={k} title={humanize(k)} items={v} />;
         if (typeof v === "string" && v.trim()) {
           if (k === "executive_summary") return <p key={k} style={{ fontSize: 13.5, lineHeight: 1.55, margin: 0, color: "var(--text-primary)" }}>{v}</p>;
-          return (
-            <div key={k} style={{ marginTop: 16 }}>
-              <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text-tertiary)", margin: "0 0 6px" }}>{humanize(k)}</h4>
-              <p style={{ fontSize: 13.5, lineHeight: 1.55, margin: 0, color: "var(--text-secondary)" }}>{v}</p>
-            </div>
-          );
+          return labeledBlock(k, <p style={{ fontSize: 13.5, lineHeight: 1.55, margin: 0, color: "var(--text-secondary)" }}>{v}</p>);
         }
-        return null;  // objects (e.g. metadata) and empties are skipped
+        if (v && typeof v === "object" && Object.keys(v).length) return labeledBlock(k, <Val v={v} />);
+        return null;
       })}
     </div>
   );
@@ -1297,18 +1495,23 @@ function ActionCard({ action, ctx, highlight }) {
   const isHi = highlight && highlight === action.id;
   const inputChips = action.inputChips || action.inputs || [];
   const built = action.built !== false;
+  const cachedAction = !!action.cached;   // backend says a cached run exists
   const launch = async (force) => {
     if (!built) return;
     setRun("running");
     const r = await api.runAction(action.id, { ...(action.inputs || {}), region: ctx.region, force: !!force });
     setRun(r);
   };
-  // Arriving from a summary-action click: scroll into view + run once (pre-load).
+  // Cached actions load their result immediately (no click). Summary-click also pre-runs.
+  React.useEffect(() => {
+    if (cachedAction && built && !run) launch(false);
+  }, [cachedAction, action.id]);
   React.useEffect(() => {
     if (isHi && ref.current) ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
     if (isHi && built && !run) launch(false);
   }, [highlight]);
   const done = run && run !== "running";
+  const showResult = cachedAction || done;        // never offer "Run agent" for cached
   return (
     <div className="act" ref={ref} style={isHi ? { boxShadow: "0 0 0 2px var(--accent)", borderColor: "var(--accent)" } : null}>
       <div className="act__title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1321,15 +1524,16 @@ function ActionCard({ action, ctx, highlight }) {
       <div className="act__desc">{withBold(action.desc)}</div>
       <div className="act__inputs">{inputChips.map((inp, i) => <span key={i} className="act__chip"><b>{inp[0]}</b> {inp[1]}</span>)}</div>
       <div className="act__foot">
-        {run === "running" ? <span className="runstat runstat--running"><span className="spin"><SpinIcon /></span> Running agent…</span>
-          : done ? <span className="runstat runstat--done"><span className="statdot" style={{ background: "var(--green)" }} /> Agent run complete</span>
+        {run === "running" ? <span className="runstat runstat--running"><span className="spin"><SpinIcon /></span> {cachedAction ? "Loading…" : "Running agent…"}</span>
+          : done ? <span className="runstat runstat--done"><span className="statdot" style={{ background: "var(--green)" }} /> {run.agentRun && run.agentRun.cached ? "Cached result" : "Agent run complete"}</span>
+          : cachedAction ? <span style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>Loading cached result…</span>
           : <span style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>{built ? "Ready · " + inputChips.length + " input set(s)" : "Awaiting Profound graph"}</span>}
-        {done ? <button className="btn btn--ghost btn--sm" onClick={() => launch(true)} disabled={run === "running"}>Refresh (live)</button>
+        {showResult ? <button className="btn btn--ghost btn--sm" onClick={() => launch(true)} disabled={run === "running"}>Refresh (live)</button>
           : <button className="btn btn--accent btn--sm" onClick={() => launch(false)} disabled={run === "running" || !built}>Run agent <ArrowIcon /></button>}
       </div>
       {run === "running" ? (
         <div className="result"><div style={{ display: "flex", alignItems: "center", gap: 9, color: "var(--text-secondary)", fontSize: 13 }}>
-          <span className="spin"><SpinIcon /></span> Running the agent… a first (uncached) run can take ~40s.
+          <span className="spin"><SpinIcon /></span> {cachedAction ? "Loading cached result…" : "Running the agent… a first (uncached) run can take ~40s."}
         </div></div>
       ) : done ? <RunResult run={run} /> : null}
     </div>
