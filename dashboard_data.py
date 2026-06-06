@@ -537,6 +537,83 @@ def sentiment_by_topic(con, region, brand, engine=None):
     return [[r["topic"], round(r["net"] or 0), r["occ"]] for r in rows]
 
 
+# ---- sentiment → source URL (the page behind a theme) -------------------------
+# Preference order when picking the single source that best represents a topic:
+# social first ("reddit or whatever"), then earned, then the rest; owned last.
+_SRC_RANK = {"social": 0, "earned_media": 1, "earned_institutions": 2, "pr_wire": 3,
+             "other": 4, "competition": 5, "owned": 6}
+
+
+def _full_url(u):
+    if not u:
+        return None
+    return u if u.startswith(("http://", "https://")) else "https://" + u
+
+
+def topic_top_source(con, engine, region):
+    """Best representative source URL per topic — the page an engine leans on most
+    when answering that topic. Prefers social (Reddit etc.), then earned, owned last.
+    Returns {topic_name: {url, domain, cat, count}}."""
+    if _is_all(engine):
+        rows = _q(con,
+            "SELECT t.name topic, ci.url url, ci.root_domain dom, ci.citation_category cat, SUM(ci.count) c "
+            "FROM fact_citation ci JOIN prompt p ON p.id=ci.prompt_id JOIN topic t ON t.id=p.topic_id "
+            "JOIN region r ON r.id=ci.region_id WHERE r.name=? AND ci.url IS NOT NULL "
+            "GROUP BY t.name, ci.url", (region,))
+    else:
+        rows = _q(con,
+            "SELECT t.name topic, ci.url url, ci.root_domain dom, ci.citation_category cat, SUM(ci.count) c "
+            "FROM fact_citation ci JOIN prompt p ON p.id=ci.prompt_id JOIN topic t ON t.id=p.topic_id "
+            "JOIN model m ON m.id=ci.model_id JOIN region r ON r.id=ci.region_id "
+            "WHERE m.name=? AND r.name=? AND ci.url IS NOT NULL GROUP BY t.name, ci.url", (engine, region))
+    best = {}
+    for r in rows:
+        rank = (_SRC_RANK.get(r["cat"], 9), -(r["c"] or 0))   # lower wins
+        cur = best.get(r["topic"])
+        if cur is None or rank < cur[0]:
+            best[r["topic"]] = (rank, r)
+    return {t: {"url": _full_url(v[1]["url"]), "domain": v[1]["dom"],
+                "cat": v[1]["cat"], "count": v[1]["c"]} for t, v in best.items()}
+
+
+def theme_sources(con, brand, engine, region, n=10):
+    """The N most-negative and N most-positive sentiment themes for the brand, each
+    mapped to a representative source URL via the theme's dominant topic. Engine-aware.
+    Returns (negatives, positives) — lists of {theme, net, occ, topic, url, domain}."""
+    if _is_all(engine):
+        rows = _q(con,
+            "SELECT s.theme theme, t.name topic, SUM(s.positive)-SUM(s.negative) net, SUM(s.occurrences) occ "
+            "FROM fact_sentiment s JOIN region r ON r.id=s.region_id LEFT JOIN topic t ON t.id=s.topic_id "
+            "WHERE s.asset_name=? AND r.name=? GROUP BY LOWER(s.theme), t.name", (brand, region))
+    else:
+        rows = _q(con,
+            "SELECT s.theme theme, t.name topic, SUM(s.positive)-SUM(s.negative) net, SUM(s.occurrences) occ "
+            "FROM fact_sentiment s JOIN model m ON m.id=s.model_id JOIN region r ON r.id=s.region_id "
+            "LEFT JOIN topic t ON t.id=s.topic_id "
+            "WHERE s.asset_name=? AND m.name=? AND r.name=? GROUP BY LOWER(s.theme), t.name",
+            (brand, engine, region))
+    agg = {}
+    for r in rows:
+        a = agg.setdefault(r["theme"].lower(),
+                           {"theme": title(r["theme"]), "net": 0, "occ": 0, "topics": {}})
+        a["net"] += round(r["net"] or 0)
+        a["occ"] += r["occ"] or 0
+        if r["topic"]:
+            a["topics"][r["topic"]] = a["topics"].get(r["topic"], 0) + (r["occ"] or 0)
+    src = topic_top_source(con, engine, region)
+    items = []
+    for a in agg.values():
+        dom_topic = max(a["topics"], key=a["topics"].get) if a["topics"] else None
+        s = src.get(dom_topic) if dom_topic else None
+        items.append({"theme": a["theme"], "net": round(a["net"]), "occ": a["occ"],
+                      "topic": dom_topic,
+                      "url": s["url"] if s else None,
+                      "domain": s["domain"] if s else None})
+    neg = sorted([i for i in items if i["net"] < 0], key=lambda i: (i["net"], -i["occ"]))[:n]
+    pos = sorted([i for i in items if i["net"] > 0], key=lambda i: (-i["net"], -i["occ"]))[:n]
+    return neg, pos
+
+
 # ============================================================== brand-performance helpers
 def brand_by_engine(con, brand, region):
     """The brand's visibility leaderboard metrics broken out per engine — the
@@ -885,6 +962,7 @@ def _role_tiles(con, role, brand, engine, region):
         gaps = gap_to_leader(con, brand, region)             # distance to category leader
         fav = favourability(con, brand, engine, region)      # positive/negative balance
         topics = sentiment_by_topic(con, region, brand, engine)  # strengths & risks by topic
+        neg_src, pos_src = theme_sources(con, brand, engine, region, 10)  # themes → source URLs
 
         # cross-engine breakdown — insight names the best/worst engine
         if eng:
@@ -966,14 +1044,25 @@ def _role_tiles(con, role, brand, engine, region):
              "meta": [t[2] for t in topics], "metaLabel": "occ",
              "insight": topic_insight,
              "caveats": "Net = positive − negative occurrences per topic. Positive themes are reputation strengths; negative are risks."},
-            {"type": "chips", "title": "Themes AI associates with " + brand,
-             "items": attrs or ["No net-positive themes"], "tone": "pos",
-             "insight": "Themes carrying net-positive sentiment for the brand.",
-             "caveats": "Top positive-net themes by occurrence."},
-            {"type": "chips", "title": "Reputation-risk themes",
-             "items": risks or ["None this snapshot"], "tone": "risk",
-             "insight": ("Negative-net themes to prepare responses for." if risks else "No net-negative themes this snapshot."),
-             "caveats": "Themes with net sentiment below zero."},
+            # Bottom: the 10 most negative & 10 most positive themes, each linking
+            # out to the source page (Reddit etc.) the engines most lean on for that
+            # theme's topic — click a theme to read where the sentiment comes from.
+            {"type": "sourcelist", "title": "Most negative sentiment — read the source",
+             "subtitle": "top 10 risk themes · " + ctx_label(engine, region), "tone": "risk",
+             "items": neg_src,
+             "insight": (("“" + neg_src[0]["theme"] + "” is the sharpest risk (net " + str(neg_src[0]["net"]) +
+                          ")" + (" — sourced from " + neg_src[0]["domain"] + "." if neg_src[0]["domain"] else "."))
+                         if neg_src else "No net-negative themes for " + brand + " in this snapshot."),
+             "caveats": "Each theme links to the top source the engines cite for that theme's topic "
+                        "(social first, then earned). It's the topic's representative page, not a per-theme citation."},
+            {"type": "sourcelist", "title": "Most positive sentiment — read the source",
+             "subtitle": "top 10 strength themes · " + ctx_label(engine, region), "tone": "pos",
+             "items": pos_src,
+             "insight": (("“" + pos_src[0]["theme"] + "” is the strongest asset (net +" + str(pos_src[0]["net"]) +
+                          ")" + (" — sourced from " + pos_src[0]["domain"] + "." if pos_src[0]["domain"] else "."))
+                         if pos_src else "No net-positive themes for " + brand + " in this snapshot."),
+             "caveats": "Each theme links to the top source the engines cite for that theme's topic "
+                        "(social first, then earned). It's the topic's representative page, not a per-theme citation."},
         ]
 
     if role == "pr":

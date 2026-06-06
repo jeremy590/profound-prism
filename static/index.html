@@ -252,6 +252,20 @@
   .promptlist { background: var(--surface-2); border-radius: var(--radius-md); padding: 10px 14px; margin: 4px 0 2px; }
   .promptlist li { font-size: 13px; color: var(--text-secondary); line-height: 1.5; padding: 3px 0; list-style: none; }
   .promptlist li:before { content: "·"; color: var(--text-tertiary); margin-right: 8px; }
+  /* ---------- Source list (sentiment theme → source URL) ---------- */
+  .srclist { display: flex; flex-direction: column; }
+  .srcrow { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--prism-hair); text-decoration: none; color: inherit; border-radius: 6px; }
+  .srcrow:last-child { border-bottom: none; }
+  a.srcrow { cursor: pointer; }
+  a.srcrow:hover { background: var(--blue-tint); }
+  .srcrow__rank { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); width: 18px; flex: none; text-align: right; }
+  .srcrow__theme { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  a.srcrow:hover .srcrow__theme { text-decoration: underline; }
+  .srcrow__net { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; flex: none; }
+  .srcrow__dom { display: inline-flex; align-items: center; gap: 4px; flex: none; max-width: 220px; font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .srcrow__dom--none { color: var(--text-tertiary); font-style: italic; }
+  .net--pos { color: var(--green); }
+  .net--neg { color: var(--red); }
   .netpos { color: var(--green); font-weight: 600; }
   .netneg { color: var(--red); font-weight: 600; }
 
@@ -974,6 +988,41 @@ function ChipsTile({ tile }) {
   );
 }
 
+/* Sentiment themes ranked, each linking out to the source page (Reddit etc.) the
+   engines lean on for that theme's topic. A row with no source renders un-clickable. */
+function SourceListTile({ tile }) {
+  const items = tile.items || [];
+  return (
+    <div className="tile">
+      <TileHead tile={tile} />
+      <div className="tile__body">
+        {items.length ? (
+          <div className="srclist">
+            {items.map((it, i) => {
+              const net = typeof it.net === "number" ? (it.net > 0 ? "+" + it.net : it.net) : it.net;
+              const netCls = "srcrow__net " + ((it.net || 0) >= 0 ? "net--pos" : "net--neg");
+              const inner = (
+                <React.Fragment>
+                  <span className="srcrow__rank">{i + 1}</span>
+                  <span className="srcrow__theme" title={it.theme}>{it.theme}</span>
+                  <span className={netCls}>{net}</span>
+                  {it.url
+                    ? <span className="srcrow__dom" title={it.url}>{it.domain || "source"} ↗</span>
+                    : <span className="srcrow__dom srcrow__dom--none">no source</span>}
+                </React.Fragment>
+              );
+              return it.url
+                ? <a key={i} className="srcrow" href={it.url} target="_blank" rel="noopener noreferrer">{inner}</a>
+                : <div key={i} className="srcrow">{inner}</div>;
+            })}
+          </div>
+        ) : <div className="empty">No themes for this brand in the current snapshot.</div>}
+      </div>
+      <Insight tile={tile} />
+    </div>
+  );
+}
+
 function KpiStrip({ tile }) {
   return <div className="tiles tiles--kpi">{tile.tiles.map((k, i) => <KpiCard key={i} k={k} />)}</div>;
 }
@@ -1304,6 +1353,7 @@ function Tile({ tile, onAction }) {
     case "table": return <TableTile tile={tile} />;
     case "bar": return <BarTile tile={tile} />;
     case "chips": return <ChipsTile tile={tile} />;
+    case "sourcelist": return <SourceListTile tile={tile} />;
     case "comp-filter": return <CompFilterTile tile={tile} />;
     case "topic-sentiment": return <TopicSentimentTile tile={tile} />;
     case "constellation": return <ConstellationTile tile={tile} />;
