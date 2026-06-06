@@ -110,21 +110,12 @@ def fetch_prompts(db):
     return [dict(r) for r in rows]
 
 
-def classify(prompts):
-    """One Claude call -> {prompt_id: [labels]}. Validates coverage + label set."""
+def _classify_call(batch):
+    """One Claude call over `batch` -> {prompt_id: [labels]} for ids it returned."""
     listing = "\n".join(
         f'{i}. id={p["id"]} | topic={p["topic"]} | tag={p["tags"]} | {p["text"]}'
-        for i, p in enumerate(prompts)
+        for i, p in enumerate(batch)
     )
-    body = {
-        "model": MODEL,
-        "max_tokens": 16000,
-        "system": RUBRIC,
-        "messages": [{
-            "role": "user",
-            "content": f"Classify these {len(prompts)} prompts:\n\n{listing}",
-        }],
-    }
     resp = requests.post(
         "https://api.anthropic.com/v1/messages",
         headers={
@@ -132,7 +123,15 @@ def classify(prompts):
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         },
-        json=body,
+        json={
+            "model": MODEL,
+            "max_tokens": 16000,
+            "system": RUBRIC,
+            "messages": [{
+                "role": "user",
+                "content": f"Classify these {len(batch)} prompts:\n\n{listing}",
+            }],
+        },
         timeout=300,
     )
     resp.raise_for_status()
@@ -140,22 +139,36 @@ def classify(prompts):
     start, end = text.find("["), text.rfind("]")
     if start == -1 or end == -1:
         sys.exit(f"No JSON array in model response:\n{text[:500]}")
-    parsed = json.loads(text[start:end + 1])
 
-    valid_ids = {p["id"] for p in prompts}
+    valid_ids = {p["id"] for p in batch}
     out = {}
-    for item in parsed:
+    for item in json.loads(text[start:end + 1]):
         pid = item["id"]
         if pid not in valid_ids:
-            sys.exit(f"Model returned unknown prompt id: {pid}")
+            continue  # ignore stray/duplicate ids; missing ones get retried
         labels = [l for l in item.get("labels", []) if l in PROMPT_CURATED]
-        if not labels:
-            sys.exit(f"Prompt {pid} got no valid label from {item.get('labels')}")
-        out[pid] = sorted(set(labels))
+        if labels:
+            out[pid] = sorted(set(labels))
+    return out
 
-    missing = valid_ids - set(out)
-    if missing:
-        sys.exit(f"{len(missing)} prompts unclassified, e.g. {list(missing)[:3]}")
+
+def classify(prompts, max_rounds=4):
+    """Classify every prompt, re-requesting any the model omits (it occasionally
+    drops items from a long array). Validates full coverage before returning."""
+    by_id = {p["id"]: p for p in prompts}
+    out = {}
+    pending = list(prompts)
+    for rnd in range(max_rounds):
+        if not pending:
+            break
+        if rnd:
+            print(f"  round {rnd + 1}: re-requesting {len(pending)} unclassified ...")
+        out.update(_classify_call(pending))
+        pending = [by_id[pid] for pid in by_id if pid not in out]
+
+    if pending:
+        sys.exit(f"{len(pending)} prompts unclassified after {max_rounds} rounds, "
+                 f"e.g. {[p['id'] for p in pending[:3]]}")
     return out
 
 
