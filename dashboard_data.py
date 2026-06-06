@@ -7,8 +7,9 @@ a trend. The connection is opened read-only as defense-in-depth.
 import json
 import os
 import sqlite3
+from datetime import datetime, timezone
 
-from config import DB_PATH, OWNED_BRAND
+from config import DB_PATH, OWNED_BRAND, CATEGORY_ID
 
 # ---- which dims actually carry data (the rest exist but are empty) ----
 N_BRANDS = 14            # brand selector size
@@ -549,6 +550,8 @@ def _role_tiles(con, role, brand, engine, region):
         topic_prompts = prompts_by_topic(con, region, 30)
         filter_topics = [c["topic"] for c in clusters]
         return [
+            # AI summary (render-only slot; mirrors the other role views)
+            _summary_tile("pm", region, badge="Use-case view"),
             # 1 — Use-case clusters
             {"type": "table", "title": "Use-case clusters", "subtitle": "all engines · " + region,
              "columns": ["Cluster", "Member Prompts", "Avg Visibility %"],
@@ -584,6 +587,8 @@ def _role_tiles(con, role, brand, engine, region):
         risks = [s["theme"] for s in sent if s["net"] < 0]
         attrs = [s["theme"] for s in sent if s["net"] > 0][:6]
         return [
+            # AI summary (render-only slot; mirrors the other role views)
+            _summary_tile("brand", region, badge="Sentiment view"),
             {"type": "bar", "title": "Net sentiment — " + brand + " vs competitors",
              "columns": ["Theme", brand] + comps, "rows": rows,
              "insight": brand + " is characterised most favourably on its top themes; gaps show where rivals win.",
@@ -602,6 +607,8 @@ def _role_tiles(con, role, brand, engine, region):
         not_citing = [d for d in third if d["beat"] != "—"][:6]
         cats = categories(con, engine, region)
         return [
+            # AI summary (render-only slot; mirrors the other role views)
+            _summary_tile("pr", region, badge="Earned media"),
             {"type": "leaderboard", "title": "Third-party domains by citations", "columns": ["Domain", "Citations"],
              "rows": [[d["root_domain"], d["count"]] for d in third[:10]],
              "insight": "The domains shaping category answers — your outreach universe.",
@@ -702,6 +709,7 @@ AGENT_META = {
     "brand_risk_response":     {"title": "Brand · Sentiment-risk response"},
     "seo_citation_gap_closer": {"title": "SEO · Citation-gap closer"},
     "pr_citation_outreach":    {"title": "PR · Citation outreach"},
+    "pm_usecase_tracker":      {"title": "PM · Use-case & adjacent questions"},
 }
 INPUT_LABELS = {"weak_topics": "weak topics", "weak_engines": "weak engines",
                 "negative_themes": "risk themes", "owned_domains": "owned domains",
@@ -719,14 +727,16 @@ def _input_chips(inputs):
     return chips
 
 
-def cmo_action_cards():
-    """The three downstream agents the summary dispatches, read from the same
-    artifact the summary slot renders — guaranteeing card ↔ action identity."""
+def action_cards(role):
+    """The downstream agent(s) a role's summary dispatches, read from the same
+    artifact the summary slot renders — guaranteeing card ↔ action identity.
+    Works for every role (data/<role>_summary.json)."""
     from agents import downstream
     cards = []
-    if os.path.isfile(SUMMARY_PATH):
+    path = os.path.join(DATA_DIR, role + "_summary.json")
+    if os.path.isfile(path):
         try:
-            with open(SUMMARY_PATH) as f:
+            with open(path) as f:
                 d = json.load(f)
         except Exception:
             d = {}
@@ -734,7 +744,8 @@ def cmo_action_cards():
             agent = a.get("agent")
             if not agent:
                 continue
-            built = downstream.is_built(agent)
+            # "built" = a real task exists (local downstream OR a live Profound graph)
+            built = downstream.is_built(agent) or agent in PROFOUND_AGENTS
             cards.append({
                 "id": agent, "agent": agent, "team": a.get("team"),
                 "title": AGENT_META.get(agent, {}).get("title", agent),
@@ -747,22 +758,38 @@ def cmo_action_cards():
     return cards
 
 
+def cmo_action_cards():        # back-compat alias
+    return action_cards("cmo")
+
+
 def actions(role):
-    if role == "cmo":
-        return {"actions": cmo_action_cards()}
-    return {"actions": ACTIONS.get(role, [])}
+    cards = action_cards(role)
+    if cards:
+        return {"actions": cards}
+    return {"actions": ACTIONS.get(role, [])}   # fallback until the artifact lands
 
 
 # ---- live Profound agent activations ----------------------------------------
 # Action ids (Actions tab + CMO dispatch name) that, on run, configure and fire a
 # real Profound Agent-Builder graph via the REST API (agents/runloop.py), poll it
 # to a terminal state, and return its output as the run summary. id -> spec.
+# Each spec: agent_id (Profound graph), brand, and how to pick the topic to run it
+# on (topic_metric) + which supporting table to show (table). input_var/output_var
+# are optional — if absent they're auto-discovered from the live agent schema at
+# run time, so an agent activates as soon as it's published (no hardcoded UUIDs).
 PROFOUND_AGENTS = {
-    "brand_risk": {  # Brand · Sentiment-risk response (Actions tab)
-        "name": "Top Sentiment Themes Report",
-        "agent_id": "019e9d89-ccfb-7223-a8d0-69070c817bcb",
-        "input_var": "403aa7a7-9ab4-4bca-a74d-149593bce97f",   # "Profound Topic"
-        "output_var": "31eb9b22-20a1-4664-a20d-2089d5af2d5b",  # "Final Report"
+    "brand_risk": {  # Brand · Sentiment-risk response — runs on our worst-sentiment topic
+        "name": "Topic Sentiment C-Suite Brief",
+        "agent_id": "019e9e31-96e3-7372-9977-97b33096d79d",
+        "input_var": "54c2db45-66a5-48f0-916f-0f083ba299c5",   # "Payload" (JSON string)
+        "output_var": "4165b648-4c1e-4e0b-84e6-4cc11bed495f",  # "LLM Response" (JSON string)
+        "brand": OWNED_BRAND, "topic_metric": "sentiment", "table": "themes",
+    },
+    "seo_brief": {  # SEO · Citation-gap closer — runs on our lowest-citation topic
+        "name": "Citation Gap Closer",
+        "agent_id": "019e9e50-3cf9-7782-979e-0b8740f77944",
+        # input_var/output_var auto-discovered from the live schema once published
+        "brand": OWNED_BRAND, "topic_metric": "citation", "table": "citation",
     },
 }
 PROFOUND_AGENTS["brand_risk_response"] = PROFOUND_AGENTS["brand_risk"]  # CMO dispatch name
@@ -777,59 +804,226 @@ def _negative_themes(region, limit=8):
             "SUM(occurrences) occ FROM fact_sentiment fs JOIN region r ON fs.region_id=r.id "
             "WHERE r.name=? AND asset_name=? GROUP BY LOWER(theme) HAVING net<0 "
             "ORDER BY net ASC, occ DESC LIMIT ?", (region, OWNED_BRAND, limit))
-        taxonomy = [r["name"] for r in _q(con, "SELECT name FROM topic")]
     finally:
         con.close()
-    return [{"theme": r["theme"], "net": int(r["net"]), "occ": r["occ"]} for r in rows], taxonomy
+    return [{"theme": r["theme"], "net": int(r["net"]), "occ": r["occ"]} for r in rows]
 
 
-def _map_to_topic(themes, taxonomy):
-    """Pick the Profound taxonomy topic the worst negative theme belongs to."""
-    for t in themes:                                   # worst-first
-        for top in taxonomy:
-            if top.lower() in t["theme"]:
-                return top
-    return "Privacy" if "Privacy" in taxonomy else (taxonomy[0] if taxonomy else "Privacy")
-
-
-def _activate_profound_agent(spec, value, poll_s=120):
-    """Configure → run → poll a live Profound agent. Returns a render block."""
-    from agents.runloop import AgentRunLoop
-    block = {"name": spec["name"], "agentId": spec["agent_id"],
-             "configured": {spec.get("input_title", "Profound Topic"): value},
-             "status": "error", "report": "", "runId": None}
+def _worst_topic(region, brand):
+    """The brand's single most-negative topic (lowest net), with its Profound id."""
+    con = _con()
     try:
-        rl = AgentRunLoop()
-        run = rl.run_agent(spec["agent_id"], {spec["input_var"]: value})
+        r = _q1(con,
+            "SELECT t.id topic_id, t.name name, ROUND(SUM(s.positive)-SUM(s.negative),0) net, "
+            "SUM(s.occurrences) occ FROM fact_sentiment s JOIN region r ON r.id=s.region_id "
+            "JOIN topic t ON t.id=s.topic_id WHERE r.name=? AND s.asset_name=? "
+            "GROUP BY t.id ORDER BY net ASC LIMIT 1", (region, brand))
+    finally:
+        con.close()
+    return r  # {topic_id, name, net, occ} or None
+
+
+def _citation_topics(region, limit=8):
+    """Topics by avg citation share for the tracked prompt set, lowest first."""
+    con = _con()
+    try:
+        rows = _q(con,
+            "SELECT topic, AVG(citation_share) cit, AVG(visibility_score) vis "
+            "FROM vw_prompt_overview WHERE region=? AND citation_share IS NOT NULL "
+            "GROUP BY topic ORDER BY cit ASC LIMIT ?", (region, limit))
+    finally:
+        con.close()
+    return [{"topic": r["topic"], "cit": r["cit"], "vis": r["vis"]} for r in rows]
+
+
+def _lowest_citation_topic(region, brand):
+    """The single lowest-citation topic (tracked prompt set), with its Profound id."""
+    con = _con()
+    try:
+        r = _q1(con,
+            "SELECT t.id topic_id, t.name name, AVG(p.citation_share) cit, AVG(p.visibility_score) vis "
+            "FROM vw_prompt_overview p JOIN topic t ON t.name=p.topic "
+            "WHERE p.region=? AND p.citation_share IS NOT NULL "
+            "GROUP BY t.id ORDER BY cit ASC LIMIT 1", (region,))
+    finally:
+        con.close()
+    return r  # {topic_id, name, cit, vis} or None
+
+
+def _select_topic(spec, region, brand):
+    """Pick the topic to run the agent on, per the spec's performance metric."""
+    if spec.get("topic_metric") == "citation":
+        return _lowest_citation_topic(region, brand)
+    return _worst_topic(region, brand)
+
+
+def _agent_url(agent_id, brand):
+    """Deep link to the agent's run page in the Profound platform."""
+    return ("https://platform.tryprofound.com/" + CATEGORY_ID + "/" + brand +
+            "/agents/" + agent_id + "/run")
+
+
+def _resolve_io(rl, spec):
+    """Return (input_var, output_var, name). Use the spec's hardcoded ids if given,
+    else discover them from the live agent schema (first input/output property)."""
+    if spec.get("input_var") and spec.get("output_var"):
+        return spec["input_var"], spec["output_var"], spec["name"]
+    a = rl.get_agent(spec["agent_id"])                       # raises if not published
+    in_props = a.get("schema", {}).get("input", {}).get("properties", {})
+    out_props = a.get("schema", {}).get("output", {}).get("properties", {})
+    if not in_props or not out_props:
+        raise RuntimeError("agent has no input/output variables yet")
+    return next(iter(in_props)), next(iter(out_props)), a.get("name") or spec["name"]
+
+
+def _activate_topic_agent(spec, topic, brand, poll_s=300):
+    """Configure → run → poll a Profound topic agent. The agent's single input is a
+    JSON STRING {topic_id, brand}; its output (JSON if parseable) is returned."""
+    from agents.runloop import AgentRunLoop
+    block = {"name": spec["name"], "agentId": spec["agent_id"], "runId": None,
+             "status": "error", "report": "", "brief": None,
+             "url": _agent_url(spec["agent_id"], brand),
+             "configured": {"Topic": topic["name"] if topic else "—", "Brand": brand,
+                            "topic_id": topic["topic_id"] if topic else None}}
+    if not topic:
+        block["report"] = "No qualifying topic found for " + brand + "."
+        return block
+    try:
+        rl = AgentRunLoop()                                  # uses PROFOUND_API_KEY
+        in_var, out_var, name = _resolve_io(rl, spec)
+        block["name"] = name
+        payload = json.dumps({"topic_id": topic["topic_id"], "brand": brand})
+        run = rl.run_agent(spec["agent_id"], {in_var: payload})
         block["runId"] = run.get("id")
         res = rl.poll_run(spec["agent_id"], block["runId"], timeout_s=poll_s)
         block["status"] = res.get("status", "unknown")
         out = res.get("outputs") or {}
-        block["report"] = out.get(spec["output_var"]) or (next(iter(out.values()), "") if out else "")
+        raw = out.get(out_var) or (next(iter(out.values()), "") if out else "")
+        block["report"] = raw
+        try:
+            block["brief"] = json.loads(raw)                 # structured brief if JSON
+        except Exception:
+            block["brief"] = None                            # else fall back to raw text
     except Exception as e:
         block["status"] = "error"
         block["report"] = "Agent run error: " + str(e)
     return block
 
 
-def run_brand_sentiment_action(action_id, ctx):
-    """Show the topics with the most negative sentiment, then fire the live
-    Profound sentiment agent on the worst topic and return its report."""
-    region = (ctx or {}).get("region") or "United States"
-    themes, taxonomy = _negative_themes(region)
-    topic = _map_to_topic(themes, taxonomy)
-    agent_run = _activate_profound_agent(PROFOUND_AGENTS[action_id], topic)
-    worst = themes[0]["theme"].title() if themes else "—"
-    summary = (str(len(themes)) + " net-negative themes need a response — worst is '" + worst +
-               "'. Activated the Profound '" + agent_run["name"] + "' agent on topic '" +
-               topic + "' (" + agent_run["status"] + ").")
+# ---- agent-run cache (writable; keyed by agent+topic+brand) ------------------
+# The C-Suite Brief agent crawls the web (~40s) and costs credits, so each
+# (agent, topic_id, brand) result is cached and served instantly on repeat. The
+# agent's output depends only on topic_id+brand (no region/engine), so that key
+# is exact. Kept in a SEPARATE writable db — profound.db stays read-only.
+CACHE_DB = os.path.join(DATA_DIR, "agent_cache.db")
+
+
+def _agent_cache_con():
+    con = sqlite3.connect(CACHE_DB)
+    con.row_factory = sqlite3.Row
+    con.execute(
+        "CREATE TABLE IF NOT EXISTS agent_run ("
+        "key TEXT PRIMARY KEY, agent_id TEXT, name TEXT, topic_id TEXT, topic TEXT, "
+        "brand TEXT, status TEXT, run_id TEXT, output TEXT, created_at TEXT)")
+    return con
+
+
+def _cache_key(agent_id, topic_id, brand):
+    return agent_id + ":" + str(topic_id) + ":" + brand
+
+
+def _cache_get(agent_id, topic_id, brand):
+    con = _agent_cache_con()
+    try:
+        r = con.execute("SELECT * FROM agent_run WHERE key=?",
+                        (_cache_key(agent_id, topic_id, brand),)).fetchone()
+    finally:
+        con.close()
+    return dict(r) if r else None
+
+
+def _cache_put(rec):
+    con = _agent_cache_con()
+    try:
+        con.execute(
+            "INSERT OR REPLACE INTO agent_run "
+            "(key, agent_id, name, topic_id, topic, brand, status, run_id, output, created_at) "
+            "VALUES (:key,:agent_id,:name,:topic_id,:topic,:brand,:status,:run_id,:output,:created_at)", rec)
+        con.commit()
+    finally:
+        con.close()
+
+
+def _context_table(spec, region):
+    """The supporting table shown alongside the agent run, per the spec."""
+    if spec.get("table") == "citation":
+        cts = _citation_topics(region)
+        return (["Topic", "Avg Citation Share %", "Avg Visibility %"],
+                [[c["topic"], round((c["cit"] or 0) * 100, 1), pct(c["vis"])] for c in cts],
+                [c["topic"] + ": citation " + str(round((c["cit"] or 0) * 100, 1)) + "%, vis " +
+                 str(pct(c["vis"])) + "%" for c in cts])
+    themes = _negative_themes(region)
+    return (["Theme", "Net sentiment", "Mentions"],
+            [[t["theme"].title(), t["net"], t["occ"]] for t in themes],
+            [t["theme"].title() + ": net " + ("+" if t["net"] >= 0 else "") + str(t["net"]) +
+             " (" + str(t["occ"]) + " mentions)" for t in themes])
+
+
+def _topic_summary(spec, brand, topic, agent_run, cache_note):
+    name = agent_run["name"]
+    status = agent_run["status"]
+    if spec.get("topic_metric") == "citation":
+        val = ("citation share " + str(round((topic["cit"] or 0) * 100, 2)) + "%") if topic else "n/a"
+        lead = "Lowest-citation topic for " + brand + " is '" + (topic["name"] if topic else "—") + "' (" + val + "). "
+    else:
+        val = ("net " + str(int(topic["net"]))) if topic else "n/a"
+        lead = "Worst sentiment topic for " + brand + " is '" + (topic["name"] if topic else "—") + "' (" + val + "). "
+    return lead + "Ran the Profound '" + name + "' agent (" + status + ")" + cache_note + "."
+
+
+def run_topic_agent_action(action_id, ctx):
+    """Pick the worst-performing topic for the action's metric, show the supporting
+    table, then fire the wired Profound agent on that topic with a {topic_id, brand}
+    payload. Cached by (agent, topic_id, brand); pass ctx.force to re-run live."""
+    ctx = ctx or {}
+    region = ctx.get("region") or "United States"
+    force = bool(ctx.get("force"))
+    spec = PROFOUND_AGENTS[action_id]
+    brand = spec.get("brand", OWNED_BRAND)
+    topic = _select_topic(spec, region, brand)
+    columns, rows, preview = _context_table(spec, region)
+
+    agent_run = None
+    if topic and not force:                              # serve cache if present
+        c = _cache_get(spec["agent_id"], topic["topic_id"], brand)
+        if c:
+            try:
+                brief = json.loads(c["output"])
+            except Exception:
+                brief = None
+            agent_run = {
+                "name": c["name"] or spec["name"], "agentId": spec["agent_id"],
+                "runId": c["run_id"], "status": c["status"], "report": c["output"], "brief": brief,
+                "url": _agent_url(spec["agent_id"], brand),
+                "configured": {"Topic": topic["name"], "Brand": brand, "topic_id": topic["topic_id"]},
+                "cached": True, "ts": c["created_at"]}
+    if agent_run is None:                                # cache miss / forced → live run
+        agent_run = _activate_topic_agent(spec, topic, brand, poll_s=300)
+        agent_run["cached"] = False
+        if topic and agent_run.get("status") == "succeeded":
+            agent_run["ts"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            _cache_put({
+                "key": _cache_key(spec["agent_id"], topic["topic_id"], brand),
+                "agent_id": spec["agent_id"], "name": agent_run["name"],
+                "topic_id": topic["topic_id"], "topic": topic["name"], "brand": brand,
+                "status": agent_run["status"], "run_id": agent_run.get("runId"),
+                "output": agent_run.get("report") or "", "created_at": agent_run["ts"]})
+
+    cache_note = " (cached)" if agent_run.get("cached") else ""
     return {
         "runId": "run_" + os.urandom(2).hex(), "status": "done", "agent": action_id,
-        "summary": summary,
-        "columns": ["Theme", "Net sentiment", "Mentions"],
-        "rows": [[t["theme"].title(), t["net"], t["occ"]] for t in themes],
-        "preview": [t["theme"].title() + ": net " + ("+" if t["net"] >= 0 else "") + str(t["net"]) +
-                    " (" + str(t["occ"]) + " mentions)" for t in themes],
+        "summary": _topic_summary(spec, brand, topic, agent_run, cache_note),
+        "columns": columns, "rows": rows, "preview": preview,
         "agentRun": agent_run,
         "seeded": ctx,
     }
@@ -838,7 +1032,7 @@ def run_brand_sentiment_action(action_id, ctx):
 def run_action(action_id, ctx):
     # Actions wired to a live Profound Agent-Builder graph run it for real.
     if action_id in PROFOUND_AGENTS:
-        return run_brand_sentiment_action(action_id, ctx)
+        return run_topic_agent_action(action_id, ctx)
     # Downstream specialist agents do a real task against the snapshot.
     from agents import downstream
     if downstream.is_built(action_id):

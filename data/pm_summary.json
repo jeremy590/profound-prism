@@ -1,0 +1,33 @@
+{
+  "summary": [
+    "**Claude is the most-recommended rival** (**51.8%** visibility, **7.2%** SoV), ahead of Google (42.4%) and our own OpenAI brand (42.0%) — the competitive set to design against.",
+    "Use cases are evenly tracked (~**10 prompts each** across Writing, Pricing, Privacy, Research) but performance isn't: **Pricing (75%)** and **Writing (75%)** lead, while **API (25%)** and **Coding (32%)** lag.",
+    "In **Coding**, Claude leads on both mentions (**333 vs 327**) and sentiment (**+25 vs +13**); in **API** the whole category is weak (ChatGPT net **−15**) — a category-defining opening.",
+    "**2,524 distinct fan-out queries** branch off tracked prompts — adjacent jobs-to-be-done the product and docs could own before rivals do."
+  ],
+  "actions": [
+    {
+      "team": "Product",
+      "agent": "pm_adjacent",
+      "text": "cluster the **2,524 fan-out queries** into a prioritised roadmap input with owners.",
+      "inputs": {
+        "region": "United States",
+        "weak_topics": ["API", "Coding", "Reasoning"]
+      }
+    },
+    {
+      "team": "Strategy",
+      "agent": "pm_teardown",
+      "text": "tear down how **Claude wins Coding** (mentions + sentiment) across the use-case clusters.",
+      "inputs": {
+        "region": "United States",
+        "competitors": ["Claude", "Google", "Gemini"]
+      }
+    }
+  ],
+  "context": {
+    "role": "pm",
+    "region": "United States",
+    "owned": "ChatGPT"
+  }
+}

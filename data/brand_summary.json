@@ -1,0 +1,32 @@
+{
+  "summary": [
+    "AI engines describe **ChatGPT net-negatively (−403)** while **Claude runs positive (+326)** and Gemini sits at **−125** — the widest reputation gap in the frontier-model pack.",
+    "The damage concentrates by topic: **Privacy (−143)** and **Safety (−135)** are deeply negative, while **Enterprise (+29)** and **Education (+26)** stay positive.",
+    "Top risk themes are **privacy concerns (−40)**, **data-privacy concerns (−18)**, **accuracy issues (−17)** and **hallucinations (−16)** — all trust-and-reliability narratives, not feature gaps.",
+    "Where we win is utility, not trust: positives cluster on **24/7 availability (+16)**, **infinite patience (+9)** and **productivity boost (+7)** — themes to amplify."
+  ],
+  "actions": [
+    {
+      "team": "Brand",
+      "agent": "brand_risk",
+      "text": "generate the **C-suite sentiment brief** on our worst topic (**Privacy, −143**) and prep responses.",
+      "inputs": {
+        "region": "United States"
+      }
+    },
+    {
+      "team": "Content",
+      "agent": "brand_claim",
+      "text": "claim the **positive themes** rivals don't own — **availability, patience, productivity**.",
+      "inputs": {
+        "region": "United States",
+        "positive_themes": ["24/7 availability", "infinite patience", "productivity boost"]
+      }
+    }
+  ],
+  "context": {
+    "role": "brand",
+    "region": "United States",
+    "owned": "ChatGPT"
+  }
+}

@@ -136,10 +136,40 @@ def run_pr(inputs):
     }
 
 
+# ── pm_usecase_tracker ───────────────────────────────────────────────────────
+def run_pm(inputs):
+    """Adjacent questions engines spin off our prompts — the use-case gaps the
+    product/docs could own, plus the weakest tracked use-case topics."""
+    region = inputs.get("region", "United States")
+    con = _con()
+    try:
+        adj = _rows(con, """
+            SELECT query, SUM(total_fanouts) AS tf
+            FROM fact_query_fanout f JOIN region r ON r.id=f.region_id
+            WHERE r.name=? GROUP BY query ORDER BY tf DESC LIMIT 10
+        """, (region,))
+        weak = _rows(con, """
+            SELECT topic, ROUND(AVG(visibility_score)*100,0) AS vis
+            FROM vw_prompt_overview WHERE region=? AND visibility_score IS NOT NULL
+            GROUP BY topic ORDER BY vis ASC LIMIT 3
+        """, (region,))
+    finally:
+        con.close()
+    weak_names = ", ".join(w["topic"] for w in weak)
+    return {
+        "summary": f"{len(adj)} adjacent questions engines spin off that the product or docs "
+                   f"could own; weakest use-cases are {weak_names}.",
+        "columns": ["Adjacent question", "Fan-outs"],
+        "rows": [[a["query"], a["tf"]] for a in adj],
+        "preview": [a["query"] for a in adj],
+    }
+
+
 REGISTRY = {
     "seo_citation_gap_closer": run_seo,
     "brand_risk_response": run_brand,
     "pr_citation_outreach": run_pr,
+    "pm_usecase_tracker": run_pm,
 }
 
 

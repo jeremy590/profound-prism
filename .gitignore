@@ -8,3 +8,6 @@ node_modules/
 
 # generated database (rebuild via ingest.py + schema.sql)
 profound.db
+
+# cached agent runs (volatile)
+data/agent_cache.db

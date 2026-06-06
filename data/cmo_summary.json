@@ -21,46 +21,6 @@
           "concerns about accuracy"
         ]
       }
-    },
-    {
-      "team": "SEO",
-      "agent": "seo_citation_gap_closer",
-      "text": "close the citation gap where we are weakest: **Microsoft Copilot** and the **API and Coding** topics.",
-      "inputs": {
-        "region": "United States",
-        "weak_engines": [
-          "Microsoft Copilot",
-          "Google Gemini",
-          "Perplexity",
-          "Google AI Mode"
-        ],
-        "weak_topics": [
-          "API",
-          "Coding",
-          "Reasoning",
-          "Speed",
-          "Safety"
-        ]
-      }
-    },
-    {
-      "team": "PR",
-      "agent": "pr_citation_outreach",
-      "text": "our own pages barely get cited (**openai.com #5**); pitch the third-party domains shaping the category.",
-      "inputs": {
-        "region": "United States",
-        "owned_domains": [
-          "openai.com",
-          "chatgpt.com"
-        ],
-        "top_third_party": [
-          "reddit.com",
-          "youtube.com",
-          "medium.com",
-          "linkedin.com",
-          "openai.com"
-        ]
-      }
     }
   ],
   "context": {

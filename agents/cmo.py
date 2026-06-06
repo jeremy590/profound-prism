@@ -551,7 +551,10 @@ def _condensed(facts, breaches):
             "inputs": {"region": facts["region"], "owned_domains": by["owned_domain_undercited"]["domains"],
                        "top_third_party": by["owned_domain_undercited"]["top_third_party"]},
         })
-    return {"summary": [p for p in (p1, p2) if p], "actions": actions[:3]}
+    # One action per dashboard: surface only the top-priority next step (the
+    # narrative paragraphs already carry the rest of the picture). Build order
+    # is the priority — sentiment risk, then citation gap, then outreach.
+    return {"summary": [p for p in (p1, p2) if p], "actions": actions[:1]}
 
 
 def dashboard_brief(region="United States", lens="product", refresh=False):

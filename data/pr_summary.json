@@ -1,0 +1,32 @@
+{
+  "summary": [
+    "Earned and social sources drive the category: **social 26%**, **earned media 15%**, institutions **5%** — owned pages are a rounding error at **1.2%**.",
+    "**reddit.com (7,238 cites)** is the single biggest earned surface, then **youtube.com (4,609)** and **medium.com (1,731)** — community and video, not traditional press.",
+    "Each domain owns a beat: **reddit → Writing**, **youtube / medium / linkedin → Reasoning**, **arxiv → Math**. Pitch to the beat, not the brand.",
+    "With owned citations at ~**1%**, the fastest lift is **earned**: seed and place on the third-party surfaces already shaping AI answers."
+  ],
+  "actions": [
+    {
+      "team": "PR",
+      "agent": "pr_pitch",
+      "text": "draft outreach for the top third-party domains that don't cite us — **reddit, youtube, medium**.",
+      "inputs": {
+        "region": "United States",
+        "top_third_party": ["reddit.com", "youtube.com", "medium.com", "linkedin.com", "arxiv.org"]
+      }
+    },
+    {
+      "team": "PR",
+      "agent": "pr_beats",
+      "text": "build the **domain → beat map** (reddit→Writing, youtube→Reasoning, arxiv→Math) for targeted outreach.",
+      "inputs": {
+        "region": "United States"
+      }
+    }
+  ],
+  "context": {
+    "role": "pr",
+    "region": "United States",
+    "owned": "ChatGPT"
+  }
+}
