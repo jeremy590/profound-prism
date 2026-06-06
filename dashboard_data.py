@@ -381,13 +381,80 @@ def competitors_by_topic(con, region):
     return by
 
 
-def sentiment_by_topic(con, region, brand):
-    """Net sentiment per topic for the owned brand, all engines."""
-    rows = _q(con,
-        "SELECT t.name topic, SUM(s.positive)-SUM(s.negative) net, SUM(s.occurrences) occ "
-        "FROM fact_sentiment s JOIN region r ON r.id=s.region_id JOIN topic t ON t.id=s.topic_id "
-        "WHERE r.name=? AND s.asset_name=? GROUP BY t.name ORDER BY net DESC", (region, brand))
+def sentiment_by_topic(con, region, brand, engine=None):
+    """Net sentiment per topic for a brand. Engine-aware: pass an engine to slice
+    a single engine, omit it (or pass the All-engines sentinel) for every engine."""
+    if engine and not _is_all(engine):
+        rows = _q(con,
+            "SELECT t.name topic, SUM(s.positive)-SUM(s.negative) net, SUM(s.occurrences) occ "
+            "FROM fact_sentiment s JOIN region r ON r.id=s.region_id JOIN topic t ON t.id=s.topic_id "
+            "JOIN model m ON m.id=s.model_id "
+            "WHERE r.name=? AND s.asset_name=? AND m.name=? GROUP BY t.name ORDER BY net DESC",
+            (region, brand, engine))
+    else:
+        rows = _q(con,
+            "SELECT t.name topic, SUM(s.positive)-SUM(s.negative) net, SUM(s.occurrences) occ "
+            "FROM fact_sentiment s JOIN region r ON r.id=s.region_id JOIN topic t ON t.id=s.topic_id "
+            "WHERE r.name=? AND s.asset_name=? GROUP BY t.name ORDER BY net DESC", (region, brand))
     return [[r["topic"], round(r["net"] or 0), r["occ"]] for r in rows]
+
+
+# ============================================================== brand-performance helpers
+def brand_by_engine(con, brand, region):
+    """The brand's visibility leaderboard metrics broken out per engine — the
+    'where am I winning / losing' view. Always spans every engine, regardless of
+    the engine selector, since the per-engine split is the whole point."""
+    return _q(con,
+        "SELECT m.name engine, v.visibility_score vis, v.share_of_voice sov, "
+        "v.average_position pos, v.mentions_count men, v.executions ex "
+        "FROM fact_visibility v JOIN model m ON m.id=v.model_id JOIN region r ON r.id=v.region_id "
+        "WHERE v.asset_name=? AND r.name=? ORDER BY vis DESC", (brand, region))
+
+
+def gap_to_leader(con, brand, region):
+    """Per-engine distance from the category leader: the #1 brand and its
+    visibility vs the selected brand's, with the gap in percentage points.
+    Sorted widest-gap first so the weakest engines surface at the top."""
+    engines = _q(con,
+        "SELECT DISTINCT m.name engine FROM fact_visibility v JOIN model m ON m.id=v.model_id "
+        "JOIN region r ON r.id=v.region_id WHERE r.name=?", (region,))
+    out = []
+    for e in engines:
+        rows = _q(con,
+            "SELECT asset_name, visibility_score FROM vw_visibility_ranked "
+            "WHERE model=? AND region=? ORDER BY visibility_rank", (e["engine"], region))
+        if not rows:
+            continue
+        leader = rows[0]
+        mine = next((r for r in rows if r["asset_name"] == brand), None)
+        mine_vis = mine["visibility_score"] if mine else None
+        is_leader = mine is not None and leader["asset_name"] == brand
+        gap = None if mine_vis is None else round((leader["visibility_score"] - mine_vis) * 100, 1)
+        out.append({"engine": e["engine"], "leader": leader["asset_name"],
+                    "leader_vis": leader["visibility_score"], "mine_vis": mine_vis,
+                    "gap": gap, "is_leader": is_leader})
+    out.sort(key=lambda r: (r["gap"] is None, -(r["gap"] or 0)))
+    return out
+
+
+def favourability(con, brand, engine, region):
+    """Overall positive vs negative sentiment volume for the brand, plus a
+    favourability ratio = positive / (positive + negative). Engine-aware."""
+    if _is_all(engine):
+        row = _q1(con,
+            "SELECT SUM(positive) pos, SUM(negative) neg, SUM(occurrences) occ "
+            "FROM fact_sentiment s JOIN region r ON r.id=s.region_id "
+            "WHERE s.asset_name=? AND r.name=?", (brand, region))
+    else:
+        row = _q1(con,
+            "SELECT SUM(positive) pos, SUM(negative) neg, SUM(occurrences) occ "
+            "FROM fact_sentiment s JOIN region r ON r.id=s.region_id JOIN model m ON m.id=s.model_id "
+            "WHERE s.asset_name=? AND r.name=? AND m.name=?", (brand, region, engine))
+    pos = (row["pos"] if row else None) or 0
+    neg = (row["neg"] if row else None) or 0
+    denom = pos + neg
+    return {"pos": pos, "neg": neg, "occ": (row["occ"] if row else 0) or 0,
+            "fav_ratio": (round(100 * pos / denom, 1) if denom else None)}
 
 
 def prompts_by_topic(con, region, limit=30):
@@ -586,13 +653,93 @@ def _role_tiles(con, role, brand, engine, region):
         rows = [[s["theme"], s["net"]] + [comp_maps[c].get(s["key"], 0) for c in comps] for s in sent]
         risks = [s["theme"] for s in sent if s["net"] < 0]
         attrs = [s["theme"] for s in sent if s["net"] > 0][:6]
+
+        # --- new brand-performance views ---
+        eng = brand_by_engine(con, brand, region)            # cross-engine breakdown
+        gaps = gap_to_leader(con, brand, region)             # distance to category leader
+        fav = favourability(con, brand, engine, region)      # positive/negative balance
+        topics = sentiment_by_topic(con, region, brand, engine)  # strengths & risks by topic
+
+        # cross-engine breakdown — insight names the best/worst engine
+        if eng:
+            best, worst = eng[0], eng[-1]
+            eng_insight = (brand + " is most visible on " + best["engine"] + " (" +
+                           str(pct(best["vis"])) + "%) and weakest on " + worst["engine"] +
+                           " (" + str(pct(worst["vis"])) + "%).")
+        else:
+            eng_insight = brand + " is not tracked on any engine in this snapshot."
+
+        # gap-to-leader — insight headlines the widest gap (or notes leadership)
+        own_leads = [g["engine"] for g in gaps if g["is_leader"]]
+        behind = [g for g in gaps if g["gap"] is not None and g["gap"] > 0]
+        if behind:
+            worst_gap = behind[0]
+            gap_insight = ("Widest gap is on " + worst_gap["engine"] + ": " +
+                           str(worst_gap["gap"]) + " pts behind " + worst_gap["leader"] + "." +
+                           (" Leads outright on " + ", ".join(own_leads) + "." if own_leads else ""))
+        elif own_leads:
+            gap_insight = brand + " leads visibility on every engine it appears in."
+        else:
+            gap_insight = "No competitive gap data for " + brand + " in this snapshot."
+
+        # favourability — net balance gauge
+        fav_net = round(fav["pos"] - fav["neg"])
+        fav_insight = (str(fav["fav_ratio"]) + "% of weighted sentiment is positive — " +
+                       ("net favourable." if fav_net >= 0 else "net unfavourable, watch the risk themes below.")
+                       if fav["fav_ratio"] is not None else "No sentiment volume recorded for " + brand + " here.")
+
+        # topic strengths & risks
+        if topics:
+            top_t, bot_t = topics[0], topics[-1]
+            topic_insight = ("Strongest reputation on " + top_t[0] + " (" +
+                             ("+" if top_t[1] >= 0 else "") + str(top_t[1]) + "); most at-risk on " +
+                             bot_t[0] + " (" + ("+" if bot_t[1] >= 0 else "") + str(bot_t[1]) + ").")
+        else:
+            topic_insight = "No topic-level sentiment recorded for " + brand + " here."
+
         return [
             # AI summary (render-only slot; mirrors the other role views)
             _summary_tile("brand", region, badge="Sentiment view"),
+            # Favourability gauge — quick read on the positive/negative balance
+            {"type": "kpi-strip", "tiles": [
+                {"title": "Favourability", "value": (str(fav["fav_ratio"]) + "%") if fav["fav_ratio"] is not None else "—",
+                 "label": "of weighted sentiment is positive", "caption": ctx_label(engine, region)},
+                {"title": "Positive mentions", "value": round(fav["pos"]), "label": "weighted positive volume"},
+                {"title": "Negative mentions", "value": round(fav["neg"]), "label": "weighted negative volume"},
+                {"title": "Net balance", "value": ("+" if fav_net >= 0 else "") + str(fav_net),
+                 "label": "positive − negative", "caption": "favourable" if fav_net >= 0 else "unfavourable"},
+            ]},
+            # Cross-engine breakdown — where the brand wins / loses by engine
+            {"type": "leaderboard", "title": "Visibility by engine — " + brand,
+             "subtitle": region + " · all engines",
+             "columns": ["Engine", "Visibility %", "Share of Voice %", "Avg Position"],
+             "rows": [[r["engine"], pct(r["vis"]), pct(r["sov"]), round(r["pos"], 1)] for r in eng],
+             "highlight": (None if _is_all(engine) else engine),
+             "insight": eng_insight,
+             "caveats": "Per-engine visibility for " + brand + "; avg position is better when lower (1 = first). Spans every engine regardless of the engine filter."},
+            # Gap-to-leader — competitive distance per engine
+            {"type": "table", "title": "Gap to category leader — " + brand,
+             "subtitle": region + " · all engines",
+             "columns": ["Engine", "Category leader", "Leader Vis %", brand + " Vis %", "Gap (pts)"],
+             "highlight": (None if _is_all(engine) else engine), "highlightCol": 0,
+             "rows": [[g["engine"], (brand + " (leads)" if g["is_leader"] else g["leader"]),
+                       pct(g["leader_vis"]),
+                       (pct(g["mine_vis"]) if g["mine_vis"] is not None else "—"),
+                       (g["gap"] if g["gap"] is not None else "—")] for g in gaps],
+             "insight": gap_insight,
+             "caveats": "Gap = leader visibility − " + brand + " visibility, in percentage points. 0 = " + brand + " leads."},
             {"type": "bar", "title": "Net sentiment — " + brand + " vs competitors",
              "columns": ["Theme", brand] + comps, "rows": rows,
              "insight": brand + " is characterised most favourably on its top themes; gaps show where rivals win.",
              "caveats": "Net = positive − negative, by theme. Negative = unfavourable."},
+            # Topic strengths & risks — reputation map across use-cases
+            {"type": "bar", "title": "Topic strengths & risks — " + brand,
+             "subtitle": "net sentiment by topic · " + ctx_label(engine, region),
+             "columns": ["Topic", "Net"],
+             "rows": [[t[0], t[1]] for t in topics],
+             "meta": [t[2] for t in topics], "metaLabel": "occ",
+             "insight": topic_insight,
+             "caveats": "Net = positive − negative occurrences per topic. Positive themes are reputation strengths; negative are risks."},
             {"type": "chips", "title": "Themes AI associates with " + brand,
              "items": attrs or ["No net-positive themes"], "tone": "pos",
              "insight": "Themes carrying net-positive sentiment for the brand.",
@@ -655,17 +802,11 @@ ACTIONS = {
         {"id": "pm_adjacent", "title": "Cluster & summarise adjacent questions",
          "desc": "Group fan-out questions into a prioritised roadmap input.",
          "inputs": [["8", "adjacent questions"], ["6", "use-case clusters"]]},
-        {"id": "pm_teardown", "title": "Competitor use-case teardown",
-         "desc": "Compare how competitors are recommended across each use-case cluster.",
-         "inputs": [["3", "competitors"], ["use-case", "prompts"]]},
     ],
     "brand": [
         {"id": "brand_risk", "title": "Draft sentiment-risk response notes",
          "desc": "Prepare talking points for the net-negative sentiment themes.",
          "inputs": [["risk", "themes"], ["competitor", "sentiment"]]},
-        {"id": "brand_claim", "title": "Claim-these-themes content plan",
-         "desc": "Plan content to own the positive themes competitors currently win.",
-         "inputs": [["positive", "themes"], ["competitor", "gaps"]]},
     ],
     "pr": [
         {"id": "pr_pitch", "title": "Draft outreach pitches for target domains",
@@ -690,12 +831,8 @@ RUN_RESULTS = {
                    "preview": "• Google Gemini (0.8%) — structured data + canonical docs\n• Perplexity (0.9%) — concise, citable summaries\n• Track owned-citation share weekly"},
     "pm_adjacent": {"summary": "Clustered the adjacent fan-out questions into a roadmap input with suggested owners.",
                     "preview": "• Tooling — MCP support, rate limits\n• Docs — long-document handling\n• Infra — offline / on-prem"},
-    "pm_teardown": {"summary": "Drafted a competitor use-case teardown across the top recommended rivals.",
-                    "preview": "Leader — coding, reasoning\nRiser — multimodal, search\nNiche — research, citations"},
     "brand_risk": {"summary": "Drafted response notes for the net-negative sentiment themes.",
                    "preview": "• Cost — frame value vs. token efficiency\n• Verbosity — concise-mode messaging\n• Hallucination — grounding & citations story"},
-    "brand_claim": {"summary": "Drafted a content plan to claim the positive themes competitors currently win.",
-                    "preview": "1. Reasoning depth — technical deep-dives\n2. Safety — trust center updates\n3. Writing quality — showcase gallery"},
     "pr_pitch": {"summary": "Drafted outreach pitches for target domains, ready for review.",
                  "preview": "1. reddit.com — relevant subreddit mods …\n2. techradar.com — reviews desk …\n3. theverge.com — AI desk …"},
     "pr_beats": {"summary": "Built a journalist / domain beat list mapping domains to topic beats.",
@@ -786,10 +923,18 @@ PROFOUND_AGENTS = {
         "brand": OWNED_BRAND, "topic_metric": "sentiment", "table": "themes",
     },
     "seo_brief": {  # SEO · Citation-gap closer — runs on our lowest-citation topic
-        "name": "Citation Gap Closer",
-        "agent_id": "019e9e50-3cf9-7782-979e-0b8740f77944",
+        "name": "Citation Gap Content Brief Generator",
+        "agent_id": "019e9e50-3cf9-7782-979e-0b788ab86228",
         # input_var/output_var auto-discovered from the live schema once published
         "brand": OWNED_BRAND, "topic_metric": "citation", "table": "citation",
+        "poll_s": 900,                                          # heavier agent (crawls web)
+    },
+    "pm_adjacent": {  # PM · Fan-out roadmap — runs on our weakest use-case topic
+        "name": "Fan-Out Roadmap Clusterer",
+        "agent_id": "019e9e70-de87-7112-9455-a6d31cc5d2b1",
+        "input_var": "92ee5f6e-fcd2-4b4f-805a-e2a63fd5067b",   # "Payload" (JSON string)
+        "output_var": "abead634-ca39-4d79-be4b-28bb69d6bef8",  # "LLM Response" (JSON string)
+        "brand": OWNED_BRAND, "topic_metric": "visibility", "table": "fanout",
     },
 }
 PROFOUND_AGENTS["brand_risk_response"] = PROFOUND_AGENTS["brand_risk"]  # CMO dispatch name
@@ -850,10 +995,26 @@ def _lowest_citation_topic(region, brand):
     return r  # {topic_id, name, cit, vis} or None
 
 
+def _lowest_visibility_topic(region, brand):
+    """The single weakest use-case topic by avg visibility (tracked prompt set), with id."""
+    con = _con()
+    try:
+        r = _q1(con,
+            "SELECT t.id topic_id, t.name name, AVG(p.visibility_score) vis, AVG(p.citation_share) cit "
+            "FROM vw_prompt_overview p JOIN topic t ON t.name=p.topic "
+            "WHERE p.region=? AND p.visibility_score IS NOT NULL "
+            "GROUP BY t.id ORDER BY vis ASC LIMIT 1", (region,))
+    finally:
+        con.close()
+    return r  # {topic_id, name, vis, cit} or None
+
+
 def _select_topic(spec, region, brand):
     """Pick the topic to run the agent on, per the spec's performance metric."""
     if spec.get("topic_metric") == "citation":
         return _lowest_citation_topic(region, brand)
+    if spec.get("topic_metric") == "visibility":
+        return _lowest_visibility_topic(region, brand)
     return _worst_topic(region, brand)
 
 
@@ -906,7 +1067,12 @@ def _activate_topic_agent(spec, topic, brand, poll_s=300):
             block["brief"] = None                            # else fall back to raw text
     except Exception as e:
         block["status"] = "error"
-        block["report"] = "Agent run error: " + str(e)
+        msg = str(e)
+        if "404" in msg or "not found" in msg.lower():
+            block["report"] = ("Agent not visible to the API yet (404). Publish '" + spec["agent_id"] +
+                                "' in Profound (and confirm the API key's org) to enable live runs.")
+        else:
+            block["report"] = "Agent run error: " + msg
     return block
 
 
@@ -956,6 +1122,19 @@ def _cache_put(rec):
 
 def _context_table(spec, region):
     """The supporting table shown alongside the agent run, per the spec."""
+    if spec.get("table") == "fanout":
+        # The adjacent fan-out questions that are the clusterer's raw input.
+        con = _con()
+        try:
+            rows = _q(con,
+                "SELECT f.query q, SUM(f.total_fanouts) tot FROM fact_query_fanout f "
+                "JOIN region r ON r.id=f.region_id WHERE r.name=? "
+                "GROUP BY f.query ORDER BY tot DESC LIMIT 10", (region,))
+        finally:
+            con.close()
+        return (["Adjacent fan-out question", "Fan-outs"],
+                [[r["q"], r["tot"]] for r in rows],
+                [r["q"] for r in rows])
     if spec.get("table") == "citation":
         cts = _citation_topics(region)
         return (["Topic", "Avg Citation Share %", "Avg Visibility %"],
@@ -972,7 +1151,10 @@ def _context_table(spec, region):
 def _topic_summary(spec, brand, topic, agent_run, cache_note):
     name = agent_run["name"]
     status = agent_run["status"]
-    if spec.get("topic_metric") == "citation":
+    if spec.get("topic_metric") == "visibility":
+        val = ("visibility " + str(pct(topic["vis"])) + "%") if topic else "n/a"
+        lead = "Weakest use-case topic for " + brand + " is '" + (topic["name"] if topic else "—") + "' (" + val + "). "
+    elif spec.get("topic_metric") == "citation":
         val = ("citation share " + str(round((topic["cit"] or 0) * 100, 2)) + "%") if topic else "n/a"
         lead = "Lowest-citation topic for " + brand + " is '" + (topic["name"] if topic else "—") + "' (" + val + "). "
     else:
@@ -1008,7 +1190,7 @@ def run_topic_agent_action(action_id, ctx):
                 "configured": {"Topic": topic["name"], "Brand": brand, "topic_id": topic["topic_id"]},
                 "cached": True, "ts": c["created_at"]}
     if agent_run is None:                                # cache miss / forced → live run
-        agent_run = _activate_topic_agent(spec, topic, brand, poll_s=300)
+        agent_run = _activate_topic_agent(spec, topic, brand, poll_s=spec.get("poll_s", 300))
         agent_run["cached"] = False
         if topic and agent_run.get("status") == "succeeded":
             agent_run["ts"] = datetime.now(timezone.utc).isoformat(timespec="seconds")

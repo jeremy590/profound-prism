@@ -14,15 +14,6 @@
         "region": "United States",
         "weak_topics": ["API", "Coding", "Reasoning"]
       }
-    },
-    {
-      "team": "Strategy",
-      "agent": "pm_teardown",
-      "text": "tear down how **Claude wins Coding** (mentions + sentiment) across the use-case clusters.",
-      "inputs": {
-        "region": "United States",
-        "competitors": ["Claude", "Google", "Gemini"]
-      }
     }
   ],
   "context": {

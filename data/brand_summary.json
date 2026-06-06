@@ -13,15 +13,6 @@
       "inputs": {
         "region": "United States"
       }
-    },
-    {
-      "team": "Content",
-      "agent": "brand_claim",
-      "text": "claim the **positive themes** rivals don't own — **availability, patience, productivity**.",
-      "inputs": {
-        "region": "United States",
-        "positive_themes": ["24/7 availability", "infinite patience", "productivity boost"]
-      }
     }
   ],
   "context": {

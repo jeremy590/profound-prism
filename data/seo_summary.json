@@ -15,24 +15,6 @@
         "region": "United States",
         "weak_topics": ["API", "Coding", "Reasoning"]
       }
-    },
-    {
-      "team": "Web",
-      "agent": "seo_refresh",
-      "text": "refresh under-cited **owned pages** (openai.com, chatgpt.com) so engines cite us over **reddit/youtube/medium**.",
-      "inputs": {
-        "region": "United States",
-        "owned_domains": ["openai.com", "chatgpt.com"]
-      }
-    },
-    {
-      "team": "Technical",
-      "agent": "seo_engine",
-      "text": "lift owned-citation share on the weakest engines: **Google Gemini (0.8%)** and **Perplexity (0.9%)**.",
-      "inputs": {
-        "region": "United States",
-        "weak_engines": ["Google Gemini", "Perplexity", "Google AI Overviews"]
-      }
     }
   ],
   "context": {

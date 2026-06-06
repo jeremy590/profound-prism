@@ -686,11 +686,9 @@ const ACTIONS = {
   ],
   pm: [
     { id: "pm_adjacent", title: "Cluster & summarise adjacent questions", desc: "Group unanswered adjacent questions into a prioritised roadmap input.", inputs: [["4", "adjacent questions"], ["5", "use-case clusters"]] },
-    { id: "pm_teardown", title: "Competitor use-case teardown", desc: "Compare how competitors are recommended across each use-case cluster.", inputs: [["3", "competitors"], ["use-case", "prompts"]] },
   ],
   brand: [
     { id: "brand_risk", title: "Draft sentiment-risk response notes", desc: "Prepare talking points for the net-negative sentiment themes.", inputs: [["3", "risk themes"], ["competitor", "sentiment"]] },
-    { id: "brand_claim", title: "Claim-these-themes content plan", desc: "Plan content to own the positive themes competitors currently win.", inputs: [["positive", "themes"], ["competitor", "gaps"]] },
   ],
   pr: [
     { id: "pr_pitch", title: "Draft outreach pitches for target domains", desc: "Personalised pitches for third-party domains that don't cite you yet.", inputs: [["12", "target domains"], ["topic", "beats"]] },
@@ -704,9 +702,7 @@ const RUN_RESULTS = {
   seo_brief: { summary: "Drafted 5 content briefs for citation-gap prompts, each with target domains and an outline.", preview: "1. \"safest AI model\" — cite arxiv, anthropic\n2. \"fastest AI model\" — benchmark table page\n3. \"best AI for coding\" — comparison hub" },
   seo_refresh: { summary: "Built a page-refresh checklist for 8 under-cited topics across owned pages.", preview: "☐ Add FAQ schema to /pricing\n☐ Refresh /enterprise with case studies\n☐ Add benchmarks to /coding" },
   pm_adjacent: { summary: "Clustered 4 adjacent questions into a roadmap input with suggested owners.", preview: "• Tooling — MCP support, rate limits\n• Docs — long-document handling\n• Infra — offline / on-prem" },
-  pm_teardown: { summary: "Drafted a competitor use-case teardown across the top 3 recommended rivals.", preview: "Claude — coding, reasoning\nGemini — multimodal, search\nPerplexity — research, citations" },
   brand_risk: { summary: "Drafted response notes for 3 net-negative sentiment themes.", preview: "• Cost — frame value vs. token efficiency\n• Verbosity — concise-mode messaging\n• Hallucination — grounding & citations story" },
-  brand_claim: { summary: "Drafted a content plan to claim 5 positive themes competitors currently win.", preview: "1. Reasoning depth — technical deep-dives\n2. Safety — trust center updates\n3. Writing quality — showcase gallery" },
   pr_pitch: { summary: "Drafted 5 outreach pitches for target domains, ready for review.", preview: "1. reddit.com — r/LocalLLaMA mods …\n2. medium.com — AI tutorials authors …\n3. techcrunch.com — enterprise AI desk …" },
   pr_beats: { summary: "Built a journalist / domain beat list mapping 15 domains to topic beats.", preview: "• techcrunch.com → News\n• theverge.com → News\n• substack.com → Opinion\n• medium.com → Tutorials" },
 };
@@ -1172,11 +1168,22 @@ function humanize(key) {
   return String(key).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// Pull the most likely "title" and "body" fields off a brief list-item object.
+// Pull the most likely "title" / "body" fields off a brief list-item object.
 function itemTitle(o) { return o.theme || o.title || o.name || o.action_title || o.learning || o.headline || null; }
-function itemBody(o) { return o.description || o.summary || o.detail || o.action || o.recommendation || o.text || o.insight || null; }
+function strOrNull(v) { return typeof v === "string" && v.trim() ? v : null; }
+function itemBody(o) { return strOrNull(o.description) || strOrNull(o.summary) || strOrNull(o.detail) || strOrNull(o.action) || strOrNull(o.recommendation) || strOrNull(o.text) || strOrNull(o.insight) || strOrNull(o.brief) || null; }
+
+// Recursively render any JSON value (string/number/array/object) without crashing.
+function Val({ v }) {
+  if (v == null) return null;
+  if (Array.isArray(v)) return <ul style={{ margin: "3px 0 0", paddingLeft: 16 }}>{v.map((x, i) => <li key={i} style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.5 }}><Val v={x} /></li>)}</ul>;
+  if (typeof v === "object") return <div style={{ marginTop: 3 }}>{Object.entries(v).map(([k, val], i) => <div key={i} style={{ fontSize: 12.5, lineHeight: 1.5 }}><b style={{ color: "var(--text-tertiary)", fontWeight: 600 }}>{humanize(k)}:</b> <Val v={val} /></div>)}</div>;
+  return <React.Fragment>{String(v)}</React.Fragment>;
+}
 
 function BriefSection({ title, items }) {
+  const TITLE_KEYS = new Set(["theme", "title", "name", "action_title", "learning", "headline"]);
+  const BODY_KEYS = new Set(["description", "summary", "detail", "action", "recommendation", "text", "insight", "brief"]);
   return (
     <div style={{ marginTop: 16 }}>
       <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text-tertiary)", margin: "0 0 8px" }}>{title}</h4>
@@ -1184,10 +1191,10 @@ function BriefSection({ title, items }) {
         {items.map((it, i) => {
           if (it && typeof it === "object") {
             const t = itemTitle(it), b = itemBody(it), ev = it.evidence_sources || it.sources;
-            // Any remaining short scalar fields (priority, owner, …) become chips.
-            const used = new Set(["theme", "title", "name", "action_title", "learning", "headline",
-              "description", "summary", "detail", "action", "recommendation", "text", "insight", "evidence_sources", "sources"]);
-            const meta = Object.entries(it).filter(([k, v]) => !used.has(k) && (typeof v === "string" || typeof v === "number"));
+            // Short scalar fields (priority, format, rank, …) → chips.
+            const meta = Object.entries(it).filter(([k, v]) => !TITLE_KEYS.has(k) && !BODY_KEYS.has(k) && k !== "evidence_sources" && k !== "sources" && (typeof v === "string" || typeof v === "number"));
+            // Remaining complex fields (nested objects/arrays) → recursive render.
+            const complex = Object.entries(it).filter(([k, v]) => !TITLE_KEYS.has(k) && k !== "evidence_sources" && k !== "sources" && v && typeof v === "object" && !(BODY_KEYS.has(k) && b));
             return (
               <div key={i} style={{ borderLeft: "2px solid var(--border-strong)", paddingLeft: 11 }}>
                 {(t || meta.length) ? (
@@ -1197,8 +1204,8 @@ function BriefSection({ title, items }) {
                   </div>
                 ) : null}
                 {b ? <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, marginTop: 2 }}>{b}</div> : null}
-                {!t && !b && !meta.length ? <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{JSON.stringify(it)}</div> : null}
-                {Array.isArray(ev) && ev.length ? <div style={{ display: "flex", gap: 5, marginTop: 5 }}>{ev.map((s, j) => <span key={j} className="act__chip" style={{ fontSize: 10.5 }}>{s}</span>)}</div> : null}
+                {complex.map(([k, v], j) => <div key={j} style={{ marginTop: 5 }}><div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-tertiary)" }}>{humanize(k)}</div><Val v={v} /></div>)}
+                {Array.isArray(ev) && ev.length ? <div style={{ display: "flex", gap: 5, marginTop: 5 }}>{ev.map((s, j) => <span key={j} className="act__chip" style={{ fontSize: 10.5 }}>{String(s)}</span>)}</div> : null}
               </div>
             );
           }
@@ -1210,11 +1217,11 @@ function BriefSection({ title, items }) {
 }
 
 function CSuiteBrief({ brief }) {
-  // Known scalar headers up top; every list field becomes a section (any name).
-  const skip = new Set(["brand", "topic_id", "overall_sentiment", "negative_sentiment_pct", "executive_summary"]);
+  // Header scalars used in the badge row; everything else renders in key order:
+  // list → section, string → labeled paragraph (executive_summary unlabeled), dict → skip.
+  const header = new Set(["brand", "topic_id", "overall_sentiment", "negative_sentiment_pct"]);
   const sentiment = brief.overall_sentiment ? humanize(brief.overall_sentiment) : null;
   const pct = brief.negative_sentiment_pct;
-  const lists = Object.keys(brief).filter((k) => Array.isArray(brief[k]) && brief[k].length);
   return (
     <div style={{ padding: "14px 16px" }}>
       {(sentiment || pct != null) ? (
@@ -1223,8 +1230,21 @@ function CSuiteBrief({ brief }) {
           {pct != null ? <span style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>{pct}% negative</span> : null}
         </div>
       ) : null}
-      {brief.executive_summary ? <p style={{ fontSize: 13.5, lineHeight: 1.55, margin: 0, color: "var(--text-primary)" }}>{brief.executive_summary}</p> : null}
-      {lists.filter((k) => !skip.has(k)).map((k) => <BriefSection key={k} title={humanize(k)} items={brief[k]} />)}
+      {Object.keys(brief).map((k) => {
+        if (header.has(k)) return null;
+        const v = brief[k];
+        if (Array.isArray(v) && v.length) return <BriefSection key={k} title={humanize(k)} items={v} />;
+        if (typeof v === "string" && v.trim()) {
+          if (k === "executive_summary") return <p key={k} style={{ fontSize: 13.5, lineHeight: 1.55, margin: 0, color: "var(--text-primary)" }}>{v}</p>;
+          return (
+            <div key={k} style={{ marginTop: 16 }}>
+              <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--text-tertiary)", margin: "0 0 6px" }}>{humanize(k)}</h4>
+              <p style={{ fontSize: 13.5, lineHeight: 1.55, margin: 0, color: "var(--text-secondary)" }}>{v}</p>
+            </div>
+          );
+        }
+        return null;  // objects (e.g. metadata) and empties are skipped
+      })}
     </div>
   );
 }
