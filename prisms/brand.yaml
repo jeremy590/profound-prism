@@ -1,0 +1,43 @@
+# Brand Lead — Sentiment Theme Watch prism
+# Source framing: Cowork docs/Personas.md §4. Sentiment-first.
+
+role: brand
+title: Brand Lead
+goal: >
+  Give the Brand Lead a sentiment-first view of how AI engines characterise the brand
+  and its competitors. Surface which themes are trending positive or negative, which
+  attributes AI associates with the brand, where rivals are winning positive
+  characterisation we should claim, and any reputation risks emerging in specific
+  markets or engines.
+
+questions:
+  - Which sentiment themes are spiking (positive or negative) about us this week?
+  - How does our sentiment compare to top competitors theme-by-theme?
+  - What attributes is AI associating with our brand?
+  - What positive themes are competitors winning that we should claim?
+  - Is there a reputation risk emerging in any market or on any engine?
+
+prompt_treatment: sentiment_shift   # prompts driving a material WoW sentiment move
+topic_treatment: theme              # topic ≈ sentiment theme
+
+slices:
+  # Sentiment per theme (pricing, quality, support, etc.)
+  - report: sentiment
+    dimensions: [theme]
+    metrics: [positive, negative, occurrences]
+    period_delta: true
+
+  # Side-by-side: brand + competitors per theme
+  # filters.asset_name -> owned brand + competitor list once known
+  - report: sentiment
+    dimensions: [asset_name, theme]
+    metrics: [positive, negative, occurrences]
+    period_delta: true
+
+  # Engine-level sentiment drift
+  - report: sentiment
+    dimensions: [model, theme]
+    metrics: [positive, negative, occurrences]
+    period_delta: true
+
+writes_prompts: false

@@ -1,0 +1,52 @@
+# Commercial Director / CMO — Weekly Executive Brief prism
+# Source framing: Cowork docs/Personas.md §1.
+# The "should I worry / should I invest more?" view — 3–5 escalation items, not a data dump.
+
+role: cmo
+title: Commercial Director / CMO
+goal: >
+  Deliver the Commercial Director a weekly executive view of AI search performance.
+  Surface visibility trend, sentiment trajectory, share-of-voice vs. top competitors,
+  and any emerging search themes that change how customers describe the category.
+  Return only the 3–5 items that warrant escalation, a decision, or new funding —
+  not a data dump.
+
+questions:
+  - How has our visibility score moved this week vs. last?
+  - Is sentiment about us trending positive or negative overall?
+  - Are any competitors gaining share-of-voice on us?
+  - Are there new ways customers are searching for our category?
+  - What's the one number I should care about today?
+
+prompt_treatment: new          # newest prompts = emerging search themes
+topic_treatment: growth        # which topics are gaining momentum
+
+slices:
+  # Headline visibility + share-of-voice trend (us)
+  - report: visibility
+    dimensions: [asset_name]
+    metrics: [visibility_score, share_of_voice]
+    period_delta: true
+    order_by: visibility_score
+
+  # Competitive movement — top rivals' share-of-voice delta
+  # filters.asset_name -> set to owned brand + top 3–5 competitors once known
+  - report: visibility
+    dimensions: [asset_name]
+    metrics: [share_of_voice, mentions_count]
+    period_delta: true
+    order_by: share_of_voice
+
+  # Headline sentiment direction
+  - report: sentiment
+    dimensions: [asset_name]
+    metrics: [positive, negative, occurrences]
+    period_delta: true
+
+  # AI-driven traffic as a commercial leading indicator
+  - report: referrals
+    dimensions: [domain]
+    metrics: [count]
+    period_delta: true
+
+writes_prompts: false

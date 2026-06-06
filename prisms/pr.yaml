@@ -1,0 +1,50 @@
+# PR / Earned Media Lead — Citation Outreach prism
+# Source framing: Cowork docs/Personas.md §5.
+# Closest prism to Profound's own canonical demo (top third-party pages citing the brand).
+
+role: pr
+title: PR / Earned Media Lead
+goal: >
+  Give the PR Lead a working list of third-party domains and authors who write about
+  the category but don't currently cite the brand. Rank by citation volume in the
+  category, identify the editor or author, and prepare personalised pitch drafts ready
+  for review. Also surface citations the brand has lost and competitor wins on target
+  publications.
+
+questions:
+  - Which third-party domains are AI engines citing most in our category?
+  - Of those, which aren't currently citing us?
+  - Where have we lost citations we used to hold?
+  - Which authors at our target publications write about the category?
+  - Which competitors are winning citations on the publications we want?
+
+prompt_treatment: third_party   # prompts feeding non-owned citations
+topic_treatment: leaderboard    # topic = category scope for the citation leaderboard
+
+slices:
+  # Third-party domain leaderboard (exclude owned root_domains via filter)
+  - report: citations
+    dimensions: [root_domain]
+    metrics: [count, citation_share]
+    period_delta: true
+    order_by: citation_share
+    limit: 50
+
+  # Page-level citation map within target domains
+  - report: citations
+    dimensions: [url]
+    metrics: [count, citation_share]
+    period_delta: true
+    order_by: count
+
+  # Domains where competitors win and we don't
+  # filters.asset_name -> competitor list once known
+  - report: citations
+    dimensions: [root_domain]
+    metrics: [count, citation_share]
+    period_delta: true
+
+# NOTE: contact enrichment (Clay / Apollo: domain -> editor/author) is a layer-later
+# treatment handled by the executor, not a report-frame slice.
+
+writes_prompts: false

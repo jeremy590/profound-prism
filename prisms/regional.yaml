@@ -1,0 +1,57 @@
+# Regional / Global Marketing Lead — AI-vs-Business Market Divergence prism
+# Source framing: Cowork docs/Personas.md §6. Cross-market gap analysis.
+# THE WRITE-SIDE PRISM: proposes region-localised prompt variants — gated by approval.
+
+role: regional
+title: Regional / Global Marketing Lead
+goal: >
+  Give the Regional Lead a country-by-country view of AI search performance. Surface
+  visibility, sentiment, and citation behaviour per market; tie each market's AI
+  performance to its business KPIs; and explain why one market wins where another loses
+  (which sources matter where — e.g. NHS in the UK vs. health ministry in Australia).
+  Recommend localisation actions per market and flag prompts that don't translate
+  cleanly between regions so the prompt-set owner can add region-specific variants
+  rather than translating one-to-one.
+
+questions:
+  - Which markets are we winning in vs. losing in this period?
+  - Why is market X outperforming market Y? Which sources matter where?
+  - Where does our AI performance line up with — or contradict — business performance per market?
+  - Which prompts don't have a sensible equivalent in market Z and need a regional rewrite?
+  - Where do we need to localise content urgently to recover ground?
+
+prompt_treatment: localisation       # prompts that don't translate across markets
+topic_treatment: region_divergence   # topic × region — wins here, loses there
+
+slices:
+  # Country leaderboard + period delta
+  - report: visibility
+    dimensions: [region]
+    metrics: [visibility_score, share_of_voice]
+    period_delta: true
+    order_by: visibility_score
+
+  # Which authoritative sources matter per market (the NHS-vs-health-ministry insight)
+  - report: citations
+    dimensions: [root_domain, region]
+    metrics: [count, citation_share]
+    period_delta: true
+
+  # Sentiment per market
+  - report: sentiment
+    dimensions: [region]
+    metrics: [positive, negative, occurrences]
+    period_delta: true
+
+  # AI-driven traffic by region
+  - report: referrals
+    dimensions: [domain]
+    metrics: [count]
+    period_delta: true
+
+# Write-side: localisation recommendations can feed PATCH /v1/.../prompts to add
+# region-specific prompt variants. NEVER auto-applied — routes to prompt-set owner.
+writes_prompts: true
+
+# NOTE: business-KPI overlay (GA4/GSC/Shopify per region) is the headline insight but
+# data-dependent — layer-later via the executor, joined to the region visibility table.

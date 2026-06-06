@@ -1,0 +1,1757 @@
+[
+  {
+    "n": 1,
+    "text": "most private ai chatbot",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 2,
+    "text": "what do people say about claude's reasoning ability",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 3,
+    "text": "ai with the strictest alignment",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 4,
+    "text": "which ai company has the fastest inference",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 5,
+    "text": "what do people say about gemini for image analysis",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 6,
+    "text": "what do people say about chatgpt for coding",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 7,
+    "text": "what do people say about claude's api",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 8,
+    "text": "ai for cs teams under 50 people",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 9,
+    "text": "best free ai with no signup",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 10,
+    "text": "ai with on prem deployment options",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 11,
+    "text": "ai that can hold a story over 50 pages",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 12,
+    "text": "what do people say about claude for business use",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 13,
+    "text": "best ai for stats homework",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 14,
+    "text": "best ai for power users by value",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 15,
+    "text": "ai for agentic coding with tools",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 16,
+    "text": "best ai for learning python from scratch",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 17,
+    "text": "what do people say about chatgpt for research",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 18,
+    "text": "ai with sso and saml support",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 19,
+    "text": "which ai company invests most in safety",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 20,
+    "text": "ai that doesnt hallucinate citations",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 21,
+    "text": "ai that handles multi file edits well",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 22,
+    "text": "ai for ad copy that actually converts",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 23,
+    "text": "what ai are big companies actually buying",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 24,
+    "text": "best ai for systematic literature review",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 25,
+    "text": "best ai for zendesk integration",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 26,
+    "text": "best ai for visual reasoning",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 27,
+    "text": "what ai are novelists using",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 28,
+    "text": "ai that does symbolic math well",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 29,
+    "text": "ai with the best annual discount",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 30,
+    "text": "ai with the best test time compute",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 31,
+    "text": "fastest ai for streaming responses",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 32,
+    "text": "ai api with prompt caching",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 33,
+    "text": "ai for graduate level math",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 34,
+    "text": "what do people say about gemini for math",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 35,
+    "text": "ai for medical translation",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 36,
+    "text": "ai that doesnt make arithmetic mistakes",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 37,
+    "text": "ai for understanding charts and graphs",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 38,
+    "text": "what do people say about chatgpt as a tutor",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 39,
+    "text": "safest ai for kids and teens",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 40,
+    "text": "smartest ai right now",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 41,
+    "text": "ai for solving riddles step by step",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 42,
+    "text": "what do people say about claude for writing",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 43,
+    "text": "best ai for screenplay writing",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 44,
+    "text": "ai that can describe a complex diagram",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 45,
+    "text": "what do people say about gemini's speed",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 46,
+    "text": "best ai api by latency",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 47,
+    "text": "best ai for image analysis",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 48,
+    "text": "which ai company has the best enterprise contracts",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 49,
+    "text": "what do people say about gemini for business use",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 50,
+    "text": "what do people say about chatgpt's reasoning ability",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 51,
+    "text": "best ai for math",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 52,
+    "text": "best ai tutor for students",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 53,
+    "text": "best ai for voice that responds in real time",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 54,
+    "text": "ai with the fastest time to first token",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 55,
+    "text": "what do people say about gemini for writing",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 56,
+    "text": "ai that handles escalations gracefully",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 57,
+    "text": "what do people say about chatgpt's speed",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 58,
+    "text": "what do people say about claude's pricing",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 59,
+    "text": "best ai for fiction without ai cliches",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 60,
+    "text": "ai with soc 2 type 2",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 61,
+    "text": "what coding ai are people switching to",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 62,
+    "text": "best ai api for building agents",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 63,
+    "text": "what ai are academics using right now",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 64,
+    "text": "ai that codes better than github copilot",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 65,
+    "text": "ai i can use without making an account",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 66,
+    "text": "ai vendor for fortune 500",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 67,
+    "text": "what ai is best at reading documents",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 68,
+    "text": "what ai are customer service teams using",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 69,
+    "text": "ai that runs code and fixes its own errors",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 70,
+    "text": "ai with citations that actually exist",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 71,
+    "text": "what do people say about claude for coding",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 72,
+    "text": "best ai for customer support",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 73,
+    "text": "best ai for grad school",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 74,
+    "text": "ai with student pricing",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 75,
+    "text": "best ai for low latency agents",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 76,
+    "text": "ai with the best chain of thought",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 77,
+    "text": "best ai tutor for kids",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 78,
+    "text": "ai with the best research mode",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 79,
+    "text": "best ai translator",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 80,
+    "text": "ai with constitutional ai",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 81,
+    "text": "ai api with the best function calling",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 82,
+    "text": "best ai for creative writing",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 83,
+    "text": "best ai for studying for the mcat",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 84,
+    "text": "best ai for refactoring legacy code",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 85,
+    "text": "ai for substack posts",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 86,
+    "text": "ai chatbot with the best image support",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 87,
+    "text": "best ai for internal knowledge base",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 88,
+    "text": "ai that wont generate harmful content",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 89,
+    "text": "what do people say about gemini as a tutor",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 90,
+    "text": "ai for solving arc agi",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 91,
+    "text": "ai for regulated industries",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 92,
+    "text": "best ai api for production",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 93,
+    "text": "what do people say about claude as a tutor",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 94,
+    "text": "ai that can solve olympiad problems",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 95,
+    "text": "ai with the best refusal behavior",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 96,
+    "text": "cheapest ai chatbot",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 97,
+    "text": "ai that gets nuance in translation",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 98,
+    "text": "best ai for typescript",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 99,
+    "text": "ai with a startup discount",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 100,
+    "text": "ai that doesnt make customers angry",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 101,
+    "text": "ai that can read handwritten notes well",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 102,
+    "text": "ai with the lowest latency",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 103,
+    "text": "best ai for sat prep",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 104,
+    "text": "best ai for proof writing",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 105,
+    "text": "ai that reasons through hard problems",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 106,
+    "text": "fastest ai api by tokens per second",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 107,
+    "text": "what do people say about gemini's privacy",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 108,
+    "text": "what do people say about claude's safety",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 109,
+    "text": "ai with the cheapest pro tier",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 110,
+    "text": "which ai gives the most usage on free plan",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 111,
+    "text": "ai for synthesizing across papers",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 112,
+    "text": "what do people say about gemini's reasoning ability",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 113,
+    "text": "ai that can prove theorems",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 114,
+    "text": "what do people say about chatgpt for writing",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 115,
+    "text": "ai with sub second responses",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 116,
+    "text": "what do people say about chatgpt for business use",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 117,
+    "text": "what ai is winning on reasoning benchmarks",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 118,
+    "text": "what do people say about chatgpt's safety",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 119,
+    "text": "best ai api by cost per million tokens",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 120,
+    "text": "fastest ai for code completion",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 121,
+    "text": "ai api with the most generous rate limits",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 122,
+    "text": "best ai for triaging tickets by priority",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 123,
+    "text": "ai for analyzing video frames",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 124,
+    "text": "best ai for enterprise deployment",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 125,
+    "text": "best ai for analyzing screenshots of code",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 126,
+    "text": "ai with the best privacy policy",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 127,
+    "text": "what ai is best at competition math",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 128,
+    "text": "best ai for ap classes",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 129,
+    "text": "ai with the longest context for big codebases",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 130,
+    "text": "what do people say about gemini's safety",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 131,
+    "text": "ai that purges logs",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 132,
+    "text": "what do people say about gemini for coding",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 133,
+    "text": "best ai for writing tests",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 134,
+    "text": "best ai for hipaa data",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 135,
+    "text": "ai that can read a 200 page pdf",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 136,
+    "text": "what do people say about gemini's pricing",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 137,
+    "text": "what ai api do startups use",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 138,
+    "text": "what do people say about gemini for customer support",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 139,
+    "text": "what do people say about claude's speed",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 140,
+    "text": "best ai for hard logic puzzles",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 141,
+    "text": "ai with the best red teaming",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 142,
+    "text": "best ai for ghostwriting a book",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 143,
+    "text": "ai that handles jailbreaks well",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 144,
+    "text": "what do people say about claude for image analysis",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 145,
+    "text": "best ai for learning a new language",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 146,
+    "text": "ai api with structured output that actually works",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 147,
+    "text": "best ai for legal work where confidentiality matters",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 148,
+    "text": "best ai for deep research",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 149,
+    "text": "ai for translating legal documents",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 150,
+    "text": "best ai for translating books",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 151,
+    "text": "best ai chatbot for ecommerce support",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 152,
+    "text": "what do people say about gemini for research",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 153,
+    "text": "best ai for differential equations",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 154,
+    "text": "ai with the best prose style",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 155,
+    "text": "best ai under 20 a month",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 156,
+    "text": "cheapest ai api per million tokens",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 157,
+    "text": "best ai for first response on chat",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 158,
+    "text": "what do people say about claude for research",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 159,
+    "text": "best ai for coding right now",
+    "topic": "Coding",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 160,
+    "text": "best thinking model",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 161,
+    "text": "ai with zero data retention",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 162,
+    "text": "ai that translates better than google translate",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 163,
+    "text": "what ai do professional translators use",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 164,
+    "text": "ai with data residency options",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 165,
+    "text": "what do people say about chatgpt for image analysis",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 166,
+    "text": "ai that writes in your voice",
+    "topic": "Writing",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 167,
+    "text": "ai for real time conversation translation",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 168,
+    "text": "ai that doesnt train on your prompts",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 169,
+    "text": "most reliable ai api right now",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 170,
+    "text": "safest ai",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 171,
+    "text": "ai that explains hard concepts simply",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 172,
+    "text": "what do people say about gemini for translation",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 173,
+    "text": "what do people say about claude for math",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 174,
+    "text": "what do people say about chatgpt for math",
+    "topic": "Math",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 175,
+    "text": "what do people say about chatgpt's api",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 176,
+    "text": "ai vendors that sign a baa for hipaa",
+    "topic": "Enterprise",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 177,
+    "text": "what do people say about claude's privacy",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 178,
+    "text": "ai chatbot that deflects tickets well",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 179,
+    "text": "what do people say about claude for customer support",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 180,
+    "text": "what do people say about chatgpt for translation",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 181,
+    "text": "fastest ai chatbot",
+    "topic": "Speed",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 182,
+    "text": "what do people say about claude for translation",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 183,
+    "text": "what ai do college students actually use",
+    "topic": "Education",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 184,
+    "text": "best ai for spanish dialects",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 185,
+    "text": "best ai for japanese to english",
+    "topic": "Translation",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 186,
+    "text": "what do people say about gemini's api",
+    "topic": "API",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 187,
+    "text": "best ai for content moderation",
+    "topic": "Safety",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 188,
+    "text": "what do people say about chatgpt for customer support",
+    "topic": "Support",
+    "tags": [
+      "Deployment"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 189,
+    "text": "ai for grad school research",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 190,
+    "text": "ai with gdpr compliance baked in",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 191,
+    "text": "best ai for finding sources for a paper",
+    "topic": "Research",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 192,
+    "text": "what do people say about chatgpt's pricing",
+    "topic": "Pricing",
+    "tags": [
+      "Value"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 193,
+    "text": "ai for ocr on receipts and invoices",
+    "topic": "Vision",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 194,
+    "text": "what do people say about chatgpt's privacy",
+    "topic": "Privacy",
+    "tags": [
+      "Trust"
+    ],
+    "status": "active"
+  },
+  {
+    "n": 195,
+    "text": "ai that thinks before answering",
+    "topic": "Reasoning",
+    "tags": [
+      "Capabilities"
+    ],
+    "status": "active"
+  }
+]

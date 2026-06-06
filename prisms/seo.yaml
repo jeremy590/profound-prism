@@ -1,0 +1,52 @@
+# SEO / Optimization Lead — Citation Recovery prism
+# Worked example. Slices read against the cached base-pull frames (see Prism-Plan.md).
+# Source framing: Cowork docs/Personas.md §2.
+
+role: seo
+title: SEO / Optimization Lead
+goal: >
+  Give the SEO Lead a working board of citation opportunities. Find pages where the
+  brand was cited and lost rank, third-party pages where rivals hold citations the
+  brand should own, and topics where category visibility is decaying. Prioritise
+  outputs by potential traffic impact, not raw visibility score.
+
+questions:
+  - Which of our pages have lost citation share this week?
+  - Which root domains are AI engines citing for our category that aren't ours?
+  - Which AI engines are we under-cited on?
+  - Which topics in our category drive the most citations?
+  - Which competitor pages are winning the citations we want?
+
+prompt_treatment: lost_citation
+topic_treatment: decay
+
+slices:
+  # Citation-share leaderboard by third-party domain
+  - report: citations
+    dimensions: [root_domain]
+    metrics: [count, citation_share]
+    period_delta: true
+    order_by: citation_share
+    limit: 25
+
+  # Owned-page citation counts + period delta (the "what to refresh" board)
+  - report: citations
+    dimensions: [url]
+    metrics: [count, citation_share]
+    period_delta: true
+    order_by: count
+
+  # Engine-level gaps — where are we under-cited (Perplexity vs ChatGPT vs Gemini)
+  - report: citations
+    dimensions: [model]
+    metrics: [count, citation_share]
+    period_delta: true
+
+  # Topic-level visibility decay
+  - report: visibility
+    dimensions: [topic]
+    metrics: [visibility_score, share_of_voice]
+    period_delta: true
+    order_by: visibility_score
+
+writes_prompts: false

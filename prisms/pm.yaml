@@ -1,0 +1,47 @@
+# Product Manager — Use-Case Tracker prism
+# Source framing: Cowork docs/Personas.md §3. "Voice of the customer through AI."
+# The one prism that TRANSFORMS prompts (LLM clustering), not just filters them.
+
+role: pm
+title: Product Manager
+goal: >
+  Give the Product Manager a clustered view of how AI engines describe the product and
+  which use-case prompts surface it. Cluster the prompts into themes (e.g. "AI design
+  support", "AI therapist", "AI coding assistant"), highlight growing vs. shrinking
+  use-cases, and surface adjacent questions the product should also answer.
+
+questions:
+  - What are the top use-cases (prompt clusters) where our product shows up?
+  - Which use-cases are growing in prompt volume? Which are shrinking?
+  - When AI describes our product, which features does it highlight?
+  - What adjacent questions are people asking that we currently don't answer?
+  - Which competitor products are being recommended for our use-cases?
+
+prompt_treatment: cluster      # cluster prompts into use-case themes (LLM)
+topic_treatment: cluster       # topics are the clustering taxonomy
+
+slices:
+  # Use-case-level visibility.
+  # ⚠ VERIFY: `prompt` may not be a valid visibility dimension (see Prism-Plan.md).
+  # If it 422s, derive use-case visibility from the citations[prompt] frame instead.
+  - report: visibility
+    dimensions: [prompt]
+    metrics: [visibility_score, share_of_voice]
+    period_delta: true
+
+  # Citation behaviour by use-case
+  - report: citations
+    dimensions: [prompt]
+    metrics: [count, citation_share]
+    period_delta: true
+
+  # Clustering taxonomy
+  - report: visibility
+    dimensions: [topic]
+    metrics: [visibility_score, share_of_voice]
+    period_delta: true
+
+# NOTE: raw AI answers (POST /v1/prompts/answers) + DataForSEO PAA are treatment-level
+# enrichments handled by the executor, not report-frame slices. Layer-later.
+
+writes_prompts: false
